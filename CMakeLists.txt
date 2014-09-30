@@ -4,6 +4,7 @@ PROJECT(pwn)
 
 # Optionally compiling part
 OPTION(BUILD_PWN_VIEWER "enables PWN viewer" true)
+OPTION(BUILD_PWN_FR1_ETH_EVALUATION "enables PWN fr1/ETH evaluation" true)
 
 # The library prefix
 SET(LIB_PREFIX pwn)

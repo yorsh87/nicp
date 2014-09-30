@@ -50,12 +50,12 @@ namespace pwn {
       U.block<3, 3>(0, 0) = stats.eigenVectors(); 
       if(imageNormals[i].squaredNorm()>0) {
 	if(stats.curvature() < _curvatureThreshold)
-	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
+	  informationMatrix[i] = _scale * (U * _flatInformationMatrix * U.transpose());
 	else 
-	  informationMatrix[i] = U * _nonFlatInformationMatrix * U.transpose();
+	  informationMatrix[i] = _scale * (U * _nonFlatInformationMatrix * U.transpose());
       } 
       else 
-	informationMatrix[i] = InformationMatrix();
+	informationMatrix[i] = _scale * InformationMatrix();
     }
   }
 

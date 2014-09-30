@@ -1,5 +1,5 @@
 #include "aligner.h"
-#include <stdexcept>
+
 #include <sys/time.h>
 #include <omp.h>
 
@@ -140,7 +140,7 @@ namespace pwn {
     _totalTime = tEnd - tStart;
     _error = _linearizer->error();
     _inliers = _linearizer->inliers();
-    
+
     _computeStatistics(_mean, _omega, _translationalEigenRatio, _rotationalEigenRatio);
     if (_rotationalEigenRatio > _rotationalMinEigenRatio || 
 	_translationalEigenRatio > _translationalMinEigenRatio) {
@@ -198,8 +198,6 @@ namespace pwn {
     Matrix6f localSigma = svd.solve(Matrix6f::Identity());
     SigmaPointVector sigmaPoints;
     Vector6f localMean = Vector6f::Zero();
-
-
     sampleUnscented(sigmaPoints, localMean, localSigma);
   
     Eigen::Isometry3f dT = _T;  // Transform from current to reference
@@ -215,14 +213,6 @@ namespace pwn {
 
     // Compute the information matrix from the covariance
     Omega = localSigma.inverse();
-
-    for (int i = 0; i<Omega.cols(); i++)
-      for (int j = 0; j<Omega.rows(); j++) {
-	if (isnan(Omega(i,j))) {
-	  Omega.setZero();
-	}
-      }
-
     Omega = .5* (Omega + Omega.transpose());
     // Have a look at the svd of the rotational and the translational part;
     JacobiSVD<Matrix3f> partialSVD;

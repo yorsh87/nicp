@@ -23,17 +23,17 @@ int main(int argc, char **argv) {
   mainWindow.show();
 
   mainWindow.spherical_projector_radioButton->setChecked(true);
-  mainWindow.rows_spinBox->setValue(800);
+  mainWindow.rows_spinBox->setValue(1000);
   mainWindow.cols_spinBox->setValue(1500);
-  mainWindow.min_distance_doubleSpinBox->setValue(1.25f);
-  mainWindow.max_distance_doubleSpinBox->setValue(10.0f);
-  mainWindow.min_image_radius_spinBox->setValue(50);
+  mainWindow.min_distance_doubleSpinBox->setValue(0.5f);
+  mainWindow.max_distance_doubleSpinBox->setValue(30.0f);
+  mainWindow.min_image_radius_spinBox->setValue(20);
   mainWindow.max_image_radius_spinBox->setValue(100);
-  mainWindow.min_points_spinBox->setValue(100);
-  mainWindow.world_radius_doubleSpinBox->setValue(0.25f);
-  mainWindow.curv_threshold_doubleSpinBox->setValue(0.2f);
-  // mainWindow.normal_angle_doubleSpinBox->setValue(0.5f);
-  // mainWindow.point_distance_doubleSpinBox->setValue(1.5f);
+  mainWindow.min_points_spinBox->setValue(10);
+  mainWindow.world_radius_doubleSpinBox->setValue(0.1f);
+  mainWindow.curv_threshold_doubleSpinBox->setValue(0.1f);
+  mainWindow.normal_angle_doubleSpinBox->setValue(0.9f);
+  mainWindow.point_distance_doubleSpinBox->setValue(1.75f);
   mainWindow.statsUpdate();
   mainWindow.correspondencesUpdate();
   mainWindow.alignerUpdate();

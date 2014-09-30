@@ -263,6 +263,10 @@ namespace pwn {
 
     inline void setRowSearchRegion(int rsr) { _rowSearchRegion = rsr; }
     inline void setColSearchRegion(int csr) { _colSearchRegion = csr; }
+    
+    inline bool demotedToGICP_() const { return _demotedToGICP; }
+    inline void setDemotedToGICP(bool demotedToGICP_) { _demotedToGICP = demotedToGICP_; }
+
   protected:
     void _computeSingle(const Cloud &referenceScene, const Cloud &currentScene, Eigen::Isometry3f T);
     void _computeMulti(const Cloud &referenceScene, const Cloud &currentScene, Eigen::Isometry3f T);
@@ -288,6 +292,7 @@ namespace pwn {
     RGBImage _currentRGBImage;
     int _rowSearchRegion;
     int _colSearchRegion;
+    bool _demotedToGICP;
   };
 
 }

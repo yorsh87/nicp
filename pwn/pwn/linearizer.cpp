@@ -12,6 +12,8 @@ namespace pwn {
     _b.setZero();
     _inlierMaxChi2 = 9e3;
     _robustKernel = true;
+    _demotedToGeneralizedICP = false;
+    _scale = 1.0f;
   }
 
   void Linearizer::update() {
@@ -58,8 +60,9 @@ namespace pwn {
 	const Normal referenceNormal = _T * _aligner->referenceCloud()->normals()[correspondence.referenceIndex];
 	const Point &currentPoint = _aligner->currentCloud()->points()[correspondence.currentIndex];
 	const Normal &currentNormal = _aligner->currentCloud()->normals()[correspondence.currentIndex];
-	const InformationMatrix &omegaP = pointOmegas[correspondence.currentIndex];
-	const InformationMatrix &omegaN = normalOmegas[correspondence.currentIndex];
+	const InformationMatrix &omegaP = pointOmegas[correspondence.currentIndex];	
+	InformationMatrix omegaN = _scale * normalOmegas[correspondence.currentIndex];
+	if(_demotedToGeneralizedICP) { omegaN.setZero(); }
       
 	const Vector4f pointError = referencePoint - currentPoint;
 	const Vector4f normalError = referenceNormal - currentNormal;

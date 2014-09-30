@@ -279,6 +279,15 @@ namespace pwn_viewer {
   }
 
   void PwnAlignerGuiMainWindow::optimize() { 
+    std::cerr << "sc: " << _statsCalculatorIntegralImage->minImageRadius() << " " << _statsCalculatorIntegralImage->maxImageRadius() << " " 
+	      << _statsCalculatorIntegralImage->minPoints() << " " << _statsCalculatorIntegralImage->worldRadius() << " "
+	      << _statsCalculatorIntegralImage->curvatureThreshold() << std::endl;
+    std::cerr << "im: " << _pointInformationMatrixCalculator->curvatureThreshold() << " " << _normalInformationMatrixCalculator->curvatureThreshold() << std::endl;
+    std::cerr << "cf: " << _correspondenceFinder->imageRows() << " " << _correspondenceFinder->imageCols() << " " 
+	      << _correspondenceFinder->inlierDistanceThreshold() << " " << _correspondenceFinder->inlierNormalAngularThreshold() << " "
+	      << _correspondenceFinder->inlierCurvatureRatioThreshold() << " " << _correspondenceFinder->flatCurvatureThreshold() << std::endl;
+    std::cerr << "al: " << _aligner->innerIterations() << " " << _aligner->outerIterations() << " " 
+	      << _aligner->minInliers() << " " << _linearizer->inlierMaxChi2() << std::endl;
     if(viewer->drawableList().size() < 2) { return; }
 
     _selectProjector();
