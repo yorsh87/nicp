@@ -18,13 +18,15 @@ System Requirements
 ----
 
 ### Minimum
-Eigen3 >= 3.2.1 
-OpenCV >= 2.4.8 
+
+- Eigen3 >= 3.2.1 
+- OpenCV >= 2.4.8 
 
 ### Complete
-OpenGL 
-Qt4 
-QGLViewer 
+
+- OpenGL 
+- Qt4 
+- QGLViewer 
 
 Building
 ----
