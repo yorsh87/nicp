@@ -49,3 +49,8 @@ Once you compiled the code you will have the following exmaple binaries:
 - pwn_aligner_gui is a simple GUI for point cloud alignment, several parameters of the algorithm can be modified with GUI buttons
 - pwn_cloud_prop_viewer simple GUI to see basic properties of a depth image / point cloud
 - pwn_simple_viewer is a GUI that given a folder allows to visualize all the point clouds, saved in .pwn format, in the folder
+
+N.B.
+----
+
+Temporarily, the NICP library will have still his old name PWN. As soon as possible all the pwn prefixes will be substituted with nicp.
