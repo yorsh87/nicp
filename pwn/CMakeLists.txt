@@ -1,0 +1,5 @@
+# Include the subdirectories
+ADD_SUBDIRECTORY(pwn)
+IF(BUILD_PWN_VIEWER)
+  ADD_SUBDIRECTORY(pwn_viewer)
+ENDIF(BUILD_PWN_VIEWER)
