@@ -138,7 +138,7 @@ int main(int argc, char ** argv) {
   deltaT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
   std::string previousDepthFilename;
   int counter = 0;
-  double t0 = get_time();
+  double totTime = 0;
   while(is.good()) {
     // Read a pair of depth images and convert them to point cloud
     char buf[4096];
@@ -201,7 +201,10 @@ int main(int argc, char ** argv) {
       initialGuess.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
       aligner.setInitialGuess(initialGuess);
       aligner.setCurrentCloud(curCloud);
+      double tBegin = get_time();
       aligner.align();  
+      double tEnd = get_time();
+      totTime += tEnd - tBegin;
       deltaT = deltaT * aligner.T();
       globalT = globalT * aligner.T();
       globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
@@ -225,7 +228,7 @@ int main(int argc, char ** argv) {
     previousDepthFilename = depthFilename;
     counter++;
   }
-  double mean_time = (get_time() - t0) / (double)counter;
+  double mean_time = totTime / (double)counter;
   std::cout << "Mean time frame: " << mean_time << std::endl;
 
   return 0;

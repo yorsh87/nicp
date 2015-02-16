@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <sys/time.h>
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -24,6 +25,7 @@ void setInputParameters(PinholePointProjector &pointProjector,
 			Aligner &aligner,
 			map<string, float> &inputParameters);
 bool fillInputParametersMap(map<string, float> &inputParameters, const string &configurationFilename);
+double get_time(); 
 
 int main(int argc, char ** argv) {
   /*********************************************************************************
@@ -119,6 +121,8 @@ int main(int argc, char ** argv) {
   Isometry3f globalT = initialT;
   globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
   std::string previousDepthFilename;
+  int counter = 0;
+  double totTime = 0;
   while(is.good()) {
     // Read a pair of depth images and convert them to point cloud
     char buf[4096];
@@ -150,7 +154,10 @@ int main(int argc, char ** argv) {
       aligner.setCurrentCloud(curCloud);
       aligner.setInitialGuess(initialGuess);
       aligner.setSensorOffset(sensorOffset);
+      double tBegin = get_time();
       aligner.align();  
+      double tEnd = get_time();
+      totTime += tEnd - tBegin;
       globalT = globalT * aligner.T();
       globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
       std::cout << "delta T: " << t2v(aligner.T()).transpose() << std::endl;
@@ -171,7 +178,10 @@ int main(int argc, char ** argv) {
       }
       refCloud = curCloud;
     }
+    counter++;
   }
+  double mean_time = totTime / (double)counter;
+  std::cout << "Mean time frame: " << mean_time << std::endl;
 
   return 0;
 }
@@ -266,4 +276,10 @@ bool fillInputParametersMap(map<string, float> &inputParameters, const string &c
   }
   
   return true;
+}
+
+inline double get_time() {
+  struct timeval ts;
+  gettimeofday(&ts, 0);
+  return ts.tv_sec + ts.tv_usec * 1e-6;
 }

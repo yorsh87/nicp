@@ -17,3 +17,20 @@ TARGET_LINK_LIBRARIES(pwn_pomerleau2munich ${OpenCV_LIBS} pwn)
 ADD_EXECUTABLE(pwn_eth_evaluate pwn_eth_evaluate.cpp)
 SET_TARGET_PROPERTIES(pwn_eth_evaluate PROPERTIES OUTPUT_NAME pwn_eth_evaluate)
 TARGET_LINK_LIBRARIES(pwn_eth_evaluate ${OpenCV_LIBS} pwn)
+
+CUDA_ADD_EXECUTABLE(kinfu_munich_evaluate kinfu_munich_evaluate.cpp
+  pwn_kinfu_tracker.h
+  image_view.cpp
+)
+TARGET_LINK_LIBRARIES(kinfu_munich_evaluate 
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBS}
+  pwn
+) 
+
+ADD_EXECUTABLE(ndt_munich_evaluate ndt_munich_evaluate.cpp)
+TARGET_LINK_LIBRARIES(ndt_munich_evaluate 
+  ${PCL_LIBRARIES}
+  ${OpenCV_LIBS}
+  pwn
+) 
