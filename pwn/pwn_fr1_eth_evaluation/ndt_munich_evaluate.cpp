@@ -6,6 +6,8 @@
 
 #include <pcl/point_types.h>
 #include <pcl/registration/ndt.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/filters/approximate_voxel_grid.h>
 
 #include "pwn/bm_se3.h"
 #include "pwn/imageutils.h"
@@ -68,8 +70,12 @@ int main(int argc, char ** argv) {
    *                         ALIGNMENT OBJECT CREATION                             *
    *********************************************************************************/
   Eigen::Matrix3f K;
+  pcl::ApproximateVoxelGrid<pcl::PointXYZ> voxelFilter;
+  float voxelLeaf = 0.01f;
+  voxelFilter.setLeafSize(voxelLeaf, voxelLeaf, voxelLeaf);
   pcl::NormalDistributionsTransform<pcl::PointXYZ, pcl::PointXYZ> ndt;
   setInputParameters(K, ndt, inputParameters);
+  
   
   /*********************************************************************************
    *                             ODOMETRY COMPUTATION                              *
@@ -89,12 +95,12 @@ int main(int argc, char ** argv) {
 
   // Read associations one by one and do the matching
   bool firstAssociation = true;
-  RawDepthImage rawDepth, scaledRawDepth;
+  RawDepthImage rawDepth;
   DepthImage depth, scaledDepth;
-  IndexImage scaledIndeces;
   Isometry3f globalT = initialT;
   pcl::PointCloud<pcl::PointXYZ>::Ptr referenceCloud(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr currentCloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr currentCloudFiltered(new pcl::PointCloud<pcl::PointXYZ>);
   pcl::PointCloud<pcl::PointXYZ>::Ptr outputCloud(new pcl::PointCloud<pcl::PointXYZ>);
   globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
   Isometry3f deltaT = initialT;
@@ -113,13 +119,12 @@ int main(int argc, char ** argv) {
     DepthImage_convert_16UC1_to_32FC1(depth, rawDepth, depthScale);
     DepthImage_scale(scaledDepth, depth, imageScale);      
     depth2pcl(currentCloud, scaledDepth, K);
-    if(firstAssociation) {
-      scaledIndeces.create(scaledDepth.rows, scaledDepth.cols);
-      firstAssociation = false;
-    }
+    voxelFilter.setInputCloud(currentCloud);
+    voxelFilter.filter(*currentCloudFiltered);    
+    if(firstAssociation) { firstAssociation = false; }
     else { 
       ndt.setInputTarget(referenceCloud);
-      ndt.setInputSource(currentCloud);
+      ndt.setInputSource(currentCloudFiltered);
       std::cout << std::endl << "********** " << previousDepthFilename << " <-- " << depthFilename << " ********** " << std::endl;     
       double tBegin = get_time();
       ndt.align(*outputCloud);
@@ -127,6 +132,13 @@ int main(int argc, char ** argv) {
       totTime += tEnd - tBegin;
       deltaT.matrix() = ndt.getFinalTransformation(); 
       deltaT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
+
+      // Transforming unfiltered, input cloud using found transform.
+      pcl::transformPointCloud(*currentCloud, *outputCloud, globalT.matrix() * ndt.getFinalTransformation());
+      char buff[1024];
+      sprintf(buff, "pcl_%05d.pcd", counter);
+      pcl::io::savePCDFileASCII(buff, *currentCloud);
+
       globalT = globalT * deltaT;
       globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
     

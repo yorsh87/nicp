@@ -164,9 +164,9 @@ int main(int argc, char ** argv) {
 	   ((float)aligner.inliers() / curCloud->points().size() < chunkInliers ||
 	    deltaT.translation().norm() > chunkDistance ||
 	    fabs(aa.angle()) > chunkAngle)) {
-	  // char tmp[1024];
-	  // sprintf(tmp, "0chunk%05d.pwn", counter);
-	  // scene->save(tmp, deltaT.inverse() * globalT, 1, true);
+	  char tmp[1024];
+	  sprintf(tmp, "0chunk%05d.pwn", counter);
+	  scene->save(tmp, deltaT.inverse() * globalT, 1, true);
 	  std::cerr << "#################################################" 
 		    << " SCENE RESET " 
 		    << "#################################################" << std::endl;

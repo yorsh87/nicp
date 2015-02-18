@@ -75,7 +75,7 @@ int main(int argc, char ** argv) {
    *********************************************************************************/
   PWNKinfuTracker pwnKinfuTracker(Vector3f::Constant(0.0f), 0.0f, 0, 0);  
   setInputParameters(pwnKinfuTracker, inputParameters);
-  ImageView imageView;
+  // ImageView imageView;
   
   /*********************************************************************************
    *                             ODOMETRY COMPUTATION                              *
@@ -127,7 +127,7 @@ int main(int argc, char ** argv) {
     }
     rawDepth2PtrStepSz(kinfuDepth, kinfuDepthData, scaledRawDepth);
     kinfuDepthDevice.upload(kinfuDepth.data, kinfuDepth.step, kinfuDepth.rows, kinfuDepth.cols);
-    imageView.showDepth(kinfuDepth);
+    // imageView.showDepth(kinfuDepth);
     std::cout << std::endl << "********** " << previousDepthFilename << " <-- " << depthFilename << " ********** " << std::endl;     
     double tBegin = get_time();
     pwnKinfuTracker.processFrame(kinfuDepthDevice);
@@ -180,6 +180,7 @@ void setInputParameters(PWNKinfuTracker &pwnKinfuTracker, map<string, float> &in
   rows = rows / imageScale;
   cols = cols / imageScale;
   std::cerr << "Image size: " << rows << " --- " << cols << std::endl;
+  std::cerr << "K: " << std::endl << K << std::endl;  
 
   // Kinfu
   float volumeSize = 3.0f;
@@ -187,7 +188,6 @@ void setInputParameters(PWNKinfuTracker &pwnKinfuTracker, map<string, float> &in
   if((it = inputParameters.find("volumeSize")) != inputParameters.end()) volumeSize = (*it).second;
   if((it = inputParameters.find("shiftingDistance")) != inputParameters.end()) shiftingDistance = (*it).second;
   pwnKinfuTracker = PWNKinfuTracker(Vector3f::Constant(volumeSize), shiftingDistance, rows, cols);
-  std::cerr << "K: " << std::endl << K << std::endl;
   pwnKinfuTracker.setDepthIntrinsics(K(0, 0), K(1, 1), K(0, 2), K(1, 2));
 }
 
