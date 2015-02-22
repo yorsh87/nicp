@@ -24,7 +24,7 @@ namespace pwn {
     return save(os, T, step, binary);  
   }
 
-  void Cloud::resize(size_t s) {
+  void Cloud::resize(size_t s, bool hasRGB) {
     if (s) {
       _points.resize(s);
       _normals.resize(s);
@@ -32,14 +32,12 @@ namespace pwn {
       _normalInformationMatrix.resize(s);
       _pointInformationMatrix.resize(s);
       _gaussians.resize(s);
-      _rgbs.resize(s);
+      if(hasRGB) { _rgbs.resize(s); }
     } else
       clear();
   }
   
-  size_t Cloud::size() {
-    return _points.size();
-  }
+  size_t Cloud::size() { return _points.size(); }
 
   bool Cloud::load(Eigen::Isometry3f &T, istream &is) {
     _points.clear();
@@ -162,7 +160,7 @@ namespace pwn {
     _rgbs.clear();
   }
 
-  void Cloud::add(Cloud cloud, const Eigen::Isometry3f &T) {
+  void Cloud::add(Cloud& cloud, const Eigen::Isometry3f &T) {
     cloud.transformInPlace(T);
     size_t k = _points.size(); 
     _points.resize(k + cloud.points().size());
@@ -173,25 +171,20 @@ namespace pwn {
     _gaussians.resize(k + cloud.gaussians().size());
     if (_rgbs.size() + cloud.rgbs().size())
       _rgbs.resize(k + cloud.rgbs().size());
-    // if (_traversabilityVector.size() && cloud.traversabilityVector().size())
-    //   _traversabilityVector.resize(k + cloud.traversabilityVector().size());
     for(int i = 0; k < _points.size(); k++, i++) {
       _points[k] = cloud.points()[i];
       _normals[k] = cloud.normals()[i];
       _stats[k] = cloud.stats()[i];
-      if(cloud.pointInformationMatrix().size() != 0) {
+      // if(cloud.pointInformationMatrix().size() != 0) {
 	_pointInformationMatrix[k] = cloud.pointInformationMatrix()[i];
 	_normalInformationMatrix[k] = cloud.normalInformationMatrix()[i];
-      }
-      if(cloud.gaussians().size() != 0) {
+	// }
+	// if(cloud.gaussians().size() != 0) {
 	_gaussians[k] = cloud.gaussians()[i];
-      }
+	// }
       if(cloud.rgbs().size() != 0) {
       	_rgbs[k] = cloud.rgbs()[i];
       }
-      // if(cloud.traversabilityVector().size() != 0) {
-      // 	_traversabilityVector[k] = cloud.traversabilityVector()[i];
-      // }
     }
   }
 
@@ -248,5 +241,113 @@ namespace pwn {
       }
   }
 
+  struct IndexTriplet {
+    int x, y, z, index;
+
+    IndexTriplet() {
+      x = y = z = 0;
+      index = -1;
+    }
+
+    IndexTriplet(const Eigen::Vector4f& v, int idx, float ires) {
+      x = (int)(ires*v.x());
+      y = (int)(ires*v.y());
+      z = (int)(ires*v.z());
+      index = idx;
+    }
+
+    bool operator < (const IndexTriplet& o) const {
+      if(z < o.z) { return true; }
+      if(z > o.z) { return false; }
+      if(x < o.x) { return true; }
+      if(x > o.x) { return false; }
+      if(y < o.y) { return true; }
+      if(y > o.y) { return false; }
+      if(index < o.index) { return true; }
+      return false;
+    }
+
+    bool sameCell(const IndexTriplet& o) const {
+      return x == o.x && y == o.y && z == o.z;
+    }
+  };
+
+  void voxelize(Cloud* model, float res) {
+    float ires = 1.0f / res;
+    std::vector<IndexTriplet> voxels(model->size());
+    for(int i = 0; i < (int)model->size(); i++) { voxels[i] = IndexTriplet(model->points()[i], i , ires); }
+    Cloud sparseModel;
+    sparseModel.resize(model->size());
+    std::sort(voxels.begin(), voxels.end());
+    int k = -1;
+    for(size_t i = 0; i < voxels.size(); i++) { 
+      IndexTriplet& triplet = voxels[i];
+      int idx = triplet.index;
+      if(k >= 0 && voxels[i].sameCell(voxels[i-1])) { 
+	sparseModel.points()[k] += model->points()[idx]; 
+	sparseModel.gaussians()[k] = model->gaussians()[idx];
+      } 
+      else {
+	k++;
+	sparseModel.points()[k] = model->points()[idx];
+	sparseModel.gaussians()[k] = model->gaussians()[idx];
+      } 
+    }
+    sparseModel.resize(k); 
+    model->resize(k);
+    for(size_t i = 0; i < sparseModel.size(); i++) { 
+      Point& p = sparseModel.points()[i];
+      p = p / p[3];
+      model->points()[i] = p;
+      model->gaussians()[i] = sparseModel.gaussians()[i];
+    }
+  }
+
+  // void voxelize(Cloud* model, float res) {
+  //   float ires = 1.0f / res;
+  //   std::vector<IndexTriplet> voxels(model->size());
+  //   for(int i = 0; i < (int)model->size(); i++) { voxels[i] = IndexTriplet(model->points()[i], i , ires); }
+  //   Cloud sparseModel;
+  //   sparseModel.resize(model->size());
+  //   std::sort(voxels.begin(), voxels.end());
+  //   int k = -1;
+  //   for(size_t i = 0; i < voxels.size(); i++) { 
+  //     IndexTriplet& triplet = voxels[i];
+  //     int idx = triplet.index;
+  //     if(k >= 0 && voxels[i].sameCell(voxels[i-1])) { 
+  // 	sparseModel.points()[k] += model->points()[idx]; 
+  // 	sparseModel.normals()[k] = model->normals()[idx];
+  // 	sparseModel.stats()[k] = model->stats()[idx];
+  // 	sparseModel.pointInformationMatrix()[k] = model->pointInformationMatrix()[idx];
+  // 	sparseModel.normalInformationMatrix()[k] = model->normalInformationMatrix()[idx];
+  // 	sparseModel.gaussians()[k] = model->gaussians()[idx];
+  // 	if(model->rgbs().size() > 0) { sparseModel.rgbs()[k] = model->rgbs()[idx]; }
+  //     } 
+  //     else {
+  // 	k++;
+  // 	sparseModel.points()[k] = model->points()[idx];
+  // 	sparseModel.normals()[k] = model->normals()[idx];
+  // 	sparseModel.stats()[k] = model->stats()[idx];
+  // 	sparseModel.pointInformationMatrix()[k] = model->pointInformationMatrix()[idx];
+  // 	sparseModel.normalInformationMatrix()[k] = model->normalInformationMatrix()[idx];
+  // 	sparseModel.gaussians()[k] = model->gaussians()[idx];
+  // 	if(model->rgbs().size() > 0) { sparseModel.rgbs()[k] = model->rgbs()[idx]; }
+  //     } 
+  //   }
+  //   sparseModel.resize(k); 
+  //   model->resize(k);
+  //   for(size_t i = 0; i < sparseModel.size(); i++) { 
+  //     Point& p = sparseModel.points()[i];
+  //     p = p / p[3];
+  //     model->points()[i] = p;
+  //     model->points()[i] = sparseModel.points()[i];
+  //     model->normals()[i] = sparseModel.normals()[i];
+  //     model->stats()[i] = sparseModel.stats()[i];
+  //     model->pointInformationMatrix()[i] = sparseModel.pointInformationMatrix()[i];
+  //     model->normalInformationMatrix()[i] = sparseModel.normalInformationMatrix()[i];
+  //     model->gaussians()[i] = sparseModel.gaussians()[i];
+  //     if(model->rgbs().size() > 0) { model->rgbs()[i] = sparseModel.rgbs()[i]; }
+  //   }
+  // }
 
 }

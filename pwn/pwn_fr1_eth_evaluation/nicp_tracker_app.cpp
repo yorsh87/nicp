@@ -137,7 +137,7 @@ public:
   void updateReferenceScene(Cloud* referenceScene_, Eigen::Isometry3f transform_) {
     if(!_drawableReferenceScene) { 
       _drawableReferenceScene = new DrawablePoints(transform_, 
-						   new GLParameterPoints(1.0f, Eigen::Vector4f(0.15f, 0.15f, 0.15f, 0.75f)), 
+						   new GLParameterPoints(1.0f, Eigen::Vector4f(0.0f, 1.0f, 0.0f, 0.75f)), 
 						   &referenceScene_->points(), &referenceScene_->normals());      
       addDrawable(_drawableReferenceScene);
     }
@@ -168,8 +168,15 @@ public:
     _needRedraw = true;
   }
 
-  void resetReferenceScene(Cloud* /*referenceScene0_*/) {
-    _needRedraw = true;
+  void resetReferenceScene() { 
+    DrawablePoints* dp = dynamic_cast<DrawablePoints*>(_drawableReferenceScene);    
+    GLParameterPoints* pp = dynamic_cast<GLParameterPoints*>(_drawableReferenceScene->parameter());    
+    if(dp && pp) {
+      pp->setColor(Eigen::Vector4f(0.2f, 0.2f, 0.2f, 0.75f));
+      dp->updatePointDrawList(); 
+    }
+    _drawableReferenceScene = 0;
+    _needRedraw = true; 
   }  
 
   inline bool needRedraw() const { return _needRedraw; }
@@ -222,6 +229,7 @@ public:
 
     init(configurationFile); 
   }
+
   ~PWNTrackerApp() {}
 
   void init(const std::string& configurationFile) {
@@ -404,16 +412,76 @@ public:
     return ts.tv_sec + ts.tv_usec * 1e-6;
   }
 
+  void compareDepths(float& in_distance, int& in_num,
+		     float& out_distance, int& out_num,
+		     const FloatImage& depths1, const IntImage& indices1, 
+		     const FloatImage& depths2, const IntImage& indices2, 
+		     float dist, bool scale_z) {
+    if(depths1.rows != indices1.rows || 
+       depths1.cols != indices1.cols) { 
+      std::cerr << "[ERROR]: image1 size mismatch in compareDepths" << std::endl; 
+      exit(-1);
+    }
+    if(depths2.rows != indices2.rows ||
+       depths2.cols != indices2.cols) { 
+      std::cerr << "[ERROR]: image2 size mismatch in compareDepths" << std::endl; 
+      exit(-1);
+    }
+    if(depths1.rows != depths2.rows ||
+       depths1.cols != depths2.cols) { 
+      std::cerr << "[ERROR]: image1 - image2 size mismatch in compareDepths" << std::endl; 
+      exit(-1);
+    }
+    
+    in_distance = 0;
+    in_num = 0;
+    out_distance = 0;
+    out_num = 0;
+		     
+    for(int r = 0; r < depths1.rows; ++r) {
+      const float* d1_ptr = depths1.ptr<float>(r);
+      const float* d2_ptr = depths2.ptr<float>(r);
+      const int* i1_ptr = indices1.ptr<int>(r);
+      const int* i2_ptr = indices2.ptr<int>(r);
+      for(int c = 0; c<depths1.cols; ++c) {
+	int i1 = *i1_ptr;
+	float d1 = *d1_ptr;
+	int i2 = *i2_ptr;
+	float d2 = *d2_ptr;
+	if(i1 > -1 && i2 > -1) {
+	  float avg = 0.5f * (d1 + d2);
+	  float d = fabs(d1 - d2);
+	  d = scale_z ? d / avg : d;
+	  if(d < dist) {
+	    in_num++;
+	    in_distance += d;
+	  } 
+	  else {
+	    out_num++;
+	    out_distance += d;
+	  }
+	}
+	i1_ptr++;
+	i2_ptr++;
+	d1_ptr++;
+	d2_ptr++;
+      }
+    }
+  }
+
   Eigen::Isometry3f globalT() const { return _globalT; }
 
   double spinOnce(Eigen::Isometry3f& deltaT, const std::string& depthFilename) { 
     // Generate new current cloud
     _tBegin = get_time();
     _rawDepth = imread(depthFilename, -1);
-    DepthImage_convert_16UC1_to_32FC1(_depth, _rawDepth, _depthScaling);
-    DepthImage_scale(_scaledDepth, _depth, _imageScaling);
+    if(_imageScaling > 1) {
+      DepthImage_convert_16UC1_to_32FC1(_depth, _rawDepth, _depthScaling);
+      DepthImage_scale(_scaledDepth, _depth, _imageScaling);
+    }
+    else { DepthImage_convert_16UC1_to_32FC1(_scaledDepth, _rawDepth, _depthScaling); }
     _scaledIndeces.create(_scaledDepth.rows, _scaledDepth.cols);
-    _converter.compute(*_currentCloud, _scaledDepth);
+    _converter.compute(*_currentCloud, _scaledDepth, Eigen::Isometry3f::Identity());
     _tEnd = get_time();
     _tInput = _tEnd - _tBegin;
 
@@ -431,16 +499,32 @@ public:
     // Update structures 
     _tBegin = get_time();   
     _deltaT = _aligner.T();      
+    _localT = _localT * _deltaT;
     _globalT = _globalT * _deltaT;
     deltaT = _deltaT;
+    
+    _converter.projector()->project(_referenceScaledIndeces, _referenceScaledDepth, _referenceScene->points());  
+    compareDepths(_inDistance, _inNum, _outDistance, _outNum,
+		  _referenceScaledDepth, _referenceScaledIndeces, 
+		  _scaledDepth, _scaledIndeces, 
+		  0.05f, false);
+    Eigen::AngleAxisf aa(_localT.linear());
+    if(_localT.translation().norm() > _breakingDistance ||
+       fabs(aa.angle()) > _breakingAngle ||
+       (float)_inNum / (float)(_inNum + _outNum) < _breakingInlierRatio) {
+      _localT.setIdentity();
+      _referenceScene = new Cloud();
+      if(_viewer) { _viewer->resetReferenceScene(); }
+    }
     _referenceScene->add(*_currentCloud, _deltaT);
     _referenceScene->transformInPlace(_deltaT.inverse());
     _merger.merge(_referenceScene);
     _seq++;
     _tEnd = get_time();
     _tUpdate = _tEnd - _tBegin;
+    std::cout << "[INFO]: inlier ratio " << (float)_inNum / (float)(_inNum + _outNum) << std::endl; 
 
-    if(_viewer) { _viewer->updateCurrentCloud(_currentCloud, _globalT); }
+    if(_viewer) { _viewer->updateCurrentCloud(_currentCloud, _globalT * _deltaT.inverse()); }
     
     std::cout << "[INFO]: timings [input: " << _tInput << "] "
 	      << "[align: " << _tAlign << "] "
@@ -457,6 +541,8 @@ protected:
   int _seq;
   int _rows, _cols;
   int _imageScaling;
+  int _inNum, _outNum;
+  float _inDistance, _outDistance; 
   float _depthScaling;
   float _breakingAngle, _breakingDistance, _breakingInlierRatio;   
   Matrix3f _K;
@@ -464,8 +550,8 @@ protected:
   Eigen::Isometry3f _deltaT, _globalT, _localT;
 
   RawDepthImage _rawDepth;
-  DepthImage _depth, _scaledDepth;
-  IndexImage _scaledIndeces;
+  DepthImage _depth, _scaledDepth, _referenceScaledDepth;
+  IndexImage _scaledIndeces, _referenceScaledIndeces;
   Cloud* _referenceScene;
   Cloud* _referenceCloud;
   Cloud* _currentCloud;
@@ -479,7 +565,7 @@ protected:
   Linearizer _linearizer;
   Aligner _aligner;  
   Merger _merger;
-  
+
   PWNTrackerAppViewer* _viewer;
 };
 
@@ -533,7 +619,8 @@ int main(int argc, char** argv) {
    *                                 MANAGE GUI                                    *
    *********************************************************************************/
   Eigen::Isometry3f globalT;
-  globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
+  globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;  
+  bool lastDepth = false;
   while(mainWindow->isVisible()) {        
     application.processEvents();
     if(viewer->needRedraw()) { viewer->updateGL(); }
@@ -562,6 +649,10 @@ int main(int argc, char** argv) {
 	 << std::endl;
       application.processEvents();
       if(viewer->needRedraw()) { viewer->updateGL(); }
+    }
+    if(!is.good() && !lastDepth) {
+      lastDepth = true;
+      viewer->resetReferenceScene();
     }
   }
 

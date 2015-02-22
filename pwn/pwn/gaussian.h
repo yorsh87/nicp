@@ -68,8 +68,8 @@ struct Gaussian {
   inline const Eigen::Vector3f& mean() const {_updateMoments(); return _mean; }
   inline const Eigen::Matrix3f& informationMatrix() const { _updateInfo(); return _informationMatrix; }
   inline const Eigen::Vector3f& informationVector() const { _updateInfo();return _informationVector; }
-
   
+
 protected:
   inline void _updateMoments() const {
     if (_momentsUpdated)

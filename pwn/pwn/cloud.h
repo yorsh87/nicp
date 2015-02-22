@@ -27,7 +27,7 @@ namespace pwn {
      */
     Cloud() {}
     
-    void resize(size_t s);
+    void resize(size_t s, bool hasRGB = false);
     size_t size();
 
     /**
@@ -169,7 +169,7 @@ namespace pwn {
      *  @param cloud is the cloud where to take the data to add.
      *  @param T is an isometry transfromation to apply to input cloud before add it to the current one.
      */    
-    void add(Cloud cloud, const Eigen::Isometry3f &T = Eigen::Isometry3f::Identity());
+    void add(Cloud& cloud, const Eigen::Isometry3f &T = Eigen::Isometry3f::Identity());
 
     /**
      *  Method that allows to transform the current cloud with the given input transformation.
@@ -191,5 +191,7 @@ namespace pwn {
     //std::vector<int> _traversabilityVector; /**< Vector of point traversability information. */
     Gaussian3fVector _gaussians; /**< Vector of gaussians representing the intrinsic error due to the sensor. */
   };
+
+  void voxelize(Cloud* model, float res);
 
 }
