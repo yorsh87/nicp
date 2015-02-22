@@ -155,6 +155,9 @@ int main(int argc, char ** argv) {
       converter.compute(*refCloud, scaledDepth);
       scaledIndeces.create(scaledDepth.rows, scaledDepth.cols);
       firstAssociation = false;
+      // char tmp[1024];
+      // sprintf(tmp, "%s.pwn", timestamp.c_str());
+      // refCloud->save(tmp, globalT, 1, true);
     }
     else {   
       if(incremental) {
@@ -164,9 +167,9 @@ int main(int argc, char ** argv) {
 	   ((float)aligner.inliers() / curCloud->points().size() < chunkInliers ||
 	    deltaT.translation().norm() > chunkDistance ||
 	    fabs(aa.angle()) > chunkAngle)) {
-	  char tmp[1024];
-	  sprintf(tmp, "0chunk%05d.pwn", counter);
-	  scene->save(tmp, deltaT.inverse() * globalT, 1, true);
+	  // char tmp[1024];
+	  // sprintf(tmp, "0chunk%05d.pwn", counter);
+	  // scene->save(tmp, deltaT.inverse() * globalT, 1, true);
 	  std::cerr << "#################################################" 
 		    << " SCENE RESET " 
 		    << "#################################################" << std::endl;
@@ -193,7 +196,7 @@ int main(int argc, char ** argv) {
       DepthImage_convert_16UC1_to_32FC1(depth, rawDepth, depthScale);
       DepthImage_scale(scaledDepth, depth, imageScale);
       curCloud = new Cloud();    
-      converter.compute(*curCloud, scaledDepth);
+      converter.compute(*curCloud, scaledDepth, Eigen::Isometry3f::Identity());
 
       std::cout << std::endl << "********** " << previousDepthFilename << " <-- " << depthFilename << " ********** " << std::endl;     
 
@@ -210,8 +213,8 @@ int main(int argc, char ** argv) {
       globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
       
       // Write result
-      std::cout << "delta T: " << t2v(aligner.T()).transpose() << std::endl;
-      std::cout << "T: " << t2v(globalT).transpose() << std::endl; 
+      std::cout << "delta  T: " << t2v(aligner.T()).transpose() << std::endl;
+      std::cout << "global T: " << t2v(globalT).transpose() << std::endl; 
       Quaternionf globalRotation = Quaternionf(globalT.linear());
       globalRotation.normalize();
       os << timestamp << " " 
@@ -224,6 +227,9 @@ int main(int argc, char ** argv) {
 	refCloud = 0;
       }
       refCloud = curCloud;
+      // char tmp[1024];
+      // sprintf(tmp, "%s.pwn", timestamp.c_str());
+      // curCloud->save(tmp, globalT, 1, true);      
     }
     previousDepthFilename = depthFilename;
     counter++;
@@ -292,6 +298,7 @@ void setInputParameters(PinholePointProjector &pointProjector,
 
   // Aligner
   if((it = inputParameters.find("outerIterations")) != inputParameters.end()) aligner.setOuterIterations((*it).second);    
+  std::cout << "Aligner iterations: " << aligner.outerIterations() << std::endl;
   if((it = inputParameters.find("innerIterations")) != inputParameters.end()) aligner.setInnerIterations((*it).second);
   if((it = inputParameters.find("minInliers")) != inputParameters.end()) aligner.setMinInliers((*it).second);
   if((it = inputParameters.find("translationalMinEigenRatio")) != inputParameters.end()) aligner.setTranslationalMinEigenRatio((*it).second);

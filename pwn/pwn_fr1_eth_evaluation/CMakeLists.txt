@@ -34,3 +34,12 @@ TARGET_LINK_LIBRARIES(ndt_munich_evaluate
   ${OpenCV_LIBS}
   pwn
 ) 
+
+ADD_EXECUTABLE(nicp_tracker_app nicp_tracker_app.cpp)
+SET_TARGET_PROPERTIES(nicp_tracker_app PROPERTIES OUTPUT_NAME nicp_tracker_app)
+TARGET_LINK_LIBRARIES(nicp_tracker_app 
+  ${OpenCV_LIBS} 
+  pwn pwn_viewer
+  ${QGLVIEWER_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} 
+  ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 
+)

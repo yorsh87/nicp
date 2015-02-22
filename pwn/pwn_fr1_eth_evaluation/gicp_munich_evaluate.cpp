@@ -138,6 +138,9 @@ int main(int argc, char ** argv) {
       refCloud = new Cloud();    
       converter.compute(*refCloud, scaledDepth, sensorOffset);
       firstAssociation = false;
+      // char tmp[1024];
+      // sprintf(tmp, "%s.pwn", timestamp.c_str());
+      // refCloud->save(tmp, globalT, 1, true);
     }
     else {
       rawDepth = imread(depthFilename, -1);
@@ -177,6 +180,9 @@ int main(int argc, char ** argv) {
 	refCloud = 0;
       }
       refCloud = curCloud;
+      // char tmp[1024];
+      // sprintf(tmp, "%s.pwn", timestamp.c_str());
+      // curCloud->save(tmp, globalT, 1, true);
     }
     counter++;
   }

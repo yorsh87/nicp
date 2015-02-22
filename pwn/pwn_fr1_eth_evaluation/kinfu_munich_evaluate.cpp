@@ -17,12 +17,13 @@ using namespace cv;
 using namespace pwn;
 using namespace pwn_fr1_eth_evaluation;
 
-void setInputParameters(PWNKinfuTracker &pwnKinfuTracker, map<string, float> &inputParameters);
+void setInputParameters(Eigen::Matrix3f &K, PWNKinfuTracker &pwnKinfuTracker, map<string, float> &inputParameters);
 bool fillInputParametersMap(map<string, float> &inputParameters, const string &configurationFilename);
 double get_time(); 
 void rawDepth2PtrStepSz(pcl::gpu::PtrStepSz<const unsigned short>& destBuffer, 
 			std::vector<unsigned short>& destData,
 			const RawDepthImage& srcBuffer);
+void depth2pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const DepthImage &depth, const Eigen::Matrix3f &K);
 
 int main(int argc, char ** argv) {
   /*********************************************************************************
@@ -73,8 +74,9 @@ int main(int argc, char ** argv) {
   /*********************************************************************************
    *                         ALIGNMENT OBJECT CREATION                             *
    *********************************************************************************/
+  Eigen::Matrix3f K;
   PWNKinfuTracker pwnKinfuTracker(Vector3f::Constant(0.0f), 0.0f, 0, 0);  
-  setInputParameters(pwnKinfuTracker, inputParameters);
+  setInputParameters(K, pwnKinfuTracker, inputParameters);
   // ImageView imageView;
   
   /*********************************************************************************
@@ -101,10 +103,16 @@ int main(int argc, char ** argv) {
   RawDepthImage rawDepth, scaledRawDepth;
   DepthImage depth, scaledDepth;
   IndexImage scaledIndeces;
+  pcl::PointCloud<pcl::PointXYZ>::Ptr currentCloud(new pcl::PointCloud<pcl::PointXYZ>);
+  pcl::PointCloud<pcl::PointXYZ>::Ptr outputCloud(new pcl::PointCloud<pcl::PointXYZ>);
   Isometry3f globalT = initialT;
-  globalT.translation() = pwnKinfuTracker.getLastEstimatedPose().translation();    
-  globalT.linear() = pwnKinfuTracker.getLastEstimatedPose().rotation();
   globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
+  Isometry3f kinfuGlobalT = initialT;
+  kinfuGlobalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
+  Isometry3f previousKinfuGlobalT = initialT;
+  previousKinfuGlobalT.translation() = pwnKinfuTracker.getLastEstimatedPose().translation();
+  previousKinfuGlobalT.linear() = pwnKinfuTracker.getLastEstimatedPose().rotation();
+  previousKinfuGlobalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
   Isometry3f deltaT = initialT;
   deltaT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
   std::string previousDepthFilename;
@@ -121,6 +129,7 @@ int main(int argc, char ** argv) {
     DepthImage_convert_16UC1_to_32FC1(depth, rawDepth, depthScale);
     DepthImage_scale(scaledDepth, depth, imageScale);      
     DepthImage_convert_32FC1_to_16UC1(scaledRawDepth, scaledDepth);
+    depth2pcl(currentCloud, scaledDepth, K);
     if(firstAssociation) {
       scaledIndeces.create(scaledDepth.rows, scaledDepth.cols);
       firstAssociation = false;
@@ -133,19 +142,42 @@ int main(int argc, char ** argv) {
     pwnKinfuTracker.processFrame(kinfuDepthDevice);
     double tEnd = get_time();
     totTime += tEnd - tBegin;
-    if(!keepGoing && pwnKinfuTracker.icpIsLost()) { break; }
-    globalT.translation() = pwnKinfuTracker.getLastEstimatedPose().translation();
-    globalT.linear() = pwnKinfuTracker.getLastEstimatedPose().rotation();
-    globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
-    
-    // Write result
+    kinfuGlobalT.translation() = pwnKinfuTracker.getLastEstimatedPose().translation();
+    kinfuGlobalT.linear() = pwnKinfuTracker.getLastEstimatedPose().rotation();
+    kinfuGlobalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
+    deltaT = previousKinfuGlobalT.inverse() * kinfuGlobalT;
+    globalT = globalT * deltaT;    
+    // std::cout << "kinfu prev global T: " << t2v(previousKinfuGlobalT).transpose() << std::endl; 
+    // std::cout << "kinfu      global T: " << t2v(kinfuGlobalT).transpose() << std::endl; 
+    std::cout << "delta  T: " << t2v(deltaT).transpose() << std::endl; 
     std::cout << "global T: " << t2v(globalT).transpose() << std::endl; 
+    if(pwnKinfuTracker.icpIsLost()) { 
+      pwnKinfuTracker.reset();
+      pwnKinfuTracker.processFrame(kinfuDepthDevice);
+      previousKinfuGlobalT.translation() = pwnKinfuTracker.getLastEstimatedPose().translation();
+      previousKinfuGlobalT.linear() = pwnKinfuTracker.getLastEstimatedPose().rotation();
+      kinfuGlobalT.translation() = pwnKinfuTracker.getLastEstimatedPose().translation();
+      kinfuGlobalT.linear() = pwnKinfuTracker.getLastEstimatedPose().rotation();
+      // std::cerr << "After reset: " << std::endl;
+      // std::cout << "kinfu prev global T: " << t2v(previousKinfuGlobalT).transpose() << std::endl; 
+      // std::cout << "kinfu      global T: " << t2v(kinfuGlobalT).transpose() << std::endl; 
+    }
+    // pcl::transformPointCloud(*currentCloud, *outputCloud, globalT.matrix());
+    // char buff[1024];
+    // sprintf(buff, "pcl_%05d.pcd", counter);
+    // pcl::io::savePCDFileASCII(buff, *outputCloud);
+
+    // Write result
     Quaternionf globalRotation = Quaternionf(globalT.linear());
     globalRotation.normalize();
     os << timestamp << " " 
        << globalT.translation().x() << " "  << globalT.translation().y() << " " << globalT.translation().z() << " " 
        << globalRotation.x() << " " << globalRotation.y() << " " << globalRotation.z() << " " << globalRotation.w() 
        << std::endl;    
+    previousKinfuGlobalT = kinfuGlobalT;
+    // std::cerr << "before closing iteration: " << std::endl;
+    // std::cout << "kinfu prev global T: " << t2v(previousKinfuGlobalT).transpose() << std::endl; 
+    // std::cout << "kinfu      global T: " << t2v(kinfuGlobalT).transpose() << std::endl; 
     previousDepthFilename = depthFilename;
     counter++;
   }
@@ -155,10 +187,9 @@ int main(int argc, char ** argv) {
   return 0;
 }
 
-void setInputParameters(PWNKinfuTracker &pwnKinfuTracker, map<string, float> &inputParameters) {
+void setInputParameters(Eigen::Matrix3f &K, PWNKinfuTracker &pwnKinfuTracker, map<string, float> &inputParameters) {
   map<string, float>::iterator it;
 
-  Matrix3f K;
   K << 
     525.0f,   0.0f, 319.5f,
       0.0f, 525.0f, 239.5f,
@@ -173,14 +204,14 @@ void setInputParameters(PWNKinfuTracker &pwnKinfuTracker, map<string, float> &in
   if((it = inputParameters.find("rows")) != inputParameters.end()) rows = (*it).second;
   if((it = inputParameters.find("cols")) != inputParameters.end()) cols = (*it).second;
   if((it = inputParameters.find("imageScale")) != inputParameters.end()) imageScale = (*it).second;
-  std::cerr << "Image scale: " << imageScale << std::endl;
+  std::cout << "Image scale: " << imageScale << std::endl;
 
   K = K / imageScale;
   K(2, 2) = 1.0f;
   rows = rows / imageScale;
   cols = cols / imageScale;
-  std::cerr << "Image size: " << rows << " --- " << cols << std::endl;
-  std::cerr << "K: " << std::endl << K << std::endl;  
+  std::cout << "Image size: " << rows << " --- " << cols << std::endl;
+  std::cout << "K: " << std::endl << K << std::endl;  
 
   // Kinfu
   float volumeSize = 3.0f;
@@ -247,4 +278,27 @@ void rawDepth2PtrStepSz(pcl::gpu::PtrStepSz<const unsigned short>& destBuffer,
     }
   }
   destBuffer.data = &destData[0];      
+}
+
+void depth2pcl(pcl::PointCloud<pcl::PointXYZ>::Ptr &cloud, const DepthImage &depth, const Eigen::Matrix3f &K) {
+  cloud->clear();
+  pcl::PointXYZ p;
+  for(int r = 0; r < depth.rows; ++r) {
+    for(int c = 0; c < depth.rows; ++c) {
+      if(depth(r, c) > 0) {
+	p.z = depth(r, c);
+	p.y = (float(r) - K(1, 2)) * p.z / K(1, 1);
+	p.x = (float(c) - K(0, 2)) * p.z / K(0, 0);
+	cloud->points.push_back(p);
+      }
+    }
+  }
+  cloud->width = cloud->points.size();
+  cloud->height = 1;
+  cloud->is_dense = true;
+  Eigen::Vector4f t = Eigen::Vector4f::Zero();
+  t[3] = 1.0f;
+  Eigen::Quaternionf q(1.0f, 0.0f, 0.0f, 0.0f);
+  cloud->sensor_origin_ = t;
+  cloud->sensor_orientation_ = q;
 }

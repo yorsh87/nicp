@@ -134,10 +134,10 @@ int main(int argc, char ** argv) {
       deltaT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
 
       // Transforming unfiltered, input cloud using found transform.
-      pcl::transformPointCloud(*currentCloud, *outputCloud, globalT.matrix() * ndt.getFinalTransformation());
-      char buff[1024];
-      sprintf(buff, "pcl_%05d.pcd", counter);
-      pcl::io::savePCDFileASCII(buff, *currentCloud);
+      // pcl::transformPointCloud(*currentCloud, *outputCloud, globalT.matrix() * ndt.getFinalTransformation());
+      // char buff[1024];
+      // sprintf(buff, "pcl_%05d.pcd", counter);
+      // pcl::io::savePCDFileASCII(buff, *currentCloud);
 
       globalT = globalT * deltaT;
       globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
@@ -153,7 +153,7 @@ int main(int argc, char ** argv) {
 	 << std::endl;   
     } 
     previousDepthFilename = depthFilename;
-    referenceCloud = currentCloud;
+    *referenceCloud = *currentCloud;
     counter++;
   }
   double mean_time = totTime / (double)counter;

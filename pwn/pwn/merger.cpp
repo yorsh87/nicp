@@ -18,11 +18,13 @@ namespace pwn {
     assert(_depthImageConverter->projector()  && "Merger: missing projector in _depthImageConverter");  
 
     PointProjector *pointProjector = _depthImageConverter->projector();
+    Eigen::Isometry3f oldTransform = pointProjector->transform();
+    
     pointProjector->setTransform(transform);
     pointProjector->project(_indexImage, 
 			    _depthImage, 
 			    cloud->points());
-      
+
     // Scan all the points, 
     // if they fall in a cell not with -1, 
     //   skip
@@ -68,8 +70,8 @@ namespace pwn {
 	_collapsedIndices[currentIndex] = currentIndex;
       } 
       else if(fabs(depth - targetZ) < _distanceThreshold && 
-	      currentNormal.dot(targetNormal) > _normalThreshold &&
-	      (viewPointDirection.dot(targetNormal)>cos(0)) ) {
+	      currentNormal.dot(targetNormal) > _normalThreshold /*&&
+	      (viewPointDirection.dot(targetNormal)>cos(0))*/ ) {
 	Gaussian3f &targetGaussian = cloud->gaussians()[targetIndex];
 	Gaussian3f &currentGaussian = cloud->gaussians()[currentIndex];
 	targetGaussian.addInformation(currentGaussian);
@@ -123,7 +125,10 @@ namespace pwn {
     
     // Recompute the normals
     // pointProjector->project(_indexImage, _depthImage, cloud->points());
+    // imwrite("merge.png", _depthImage * 10);
     // _depthImageConverter->compute(*cloud, _depthImage, transform);
+
+    pointProjector->setTransform(oldTransform);
   }
 
 }
