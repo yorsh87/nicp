@@ -168,9 +168,7 @@ public:
     _needRedraw = true;
   }
 
-  void resetReferenceScene(Cloud* /*referenceScene0_*/) {
-    _needRedraw = true;
-  }  
+  void resetReferenceScene(Cloud* /*referenceScene0_*/) { _needRedraw = true; }  
 
   inline bool needRedraw() const { return _needRedraw; }
   inline bool spin() const { return _spin; }
@@ -479,7 +477,7 @@ protected:
   Linearizer _linearizer;
   Aligner _aligner;  
   Merger _merger;
-  
+
   PWNTrackerAppViewer* _viewer;
 };
 
