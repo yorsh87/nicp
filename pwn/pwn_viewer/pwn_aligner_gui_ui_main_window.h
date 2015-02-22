@@ -815,27 +815,27 @@ public:
         pinhole_gridLayout->setObjectName(QString::fromUtf8("pinhole_gridLayout"));
         cx_doubleSpinBox = new QDoubleSpinBox(centralwidget);
         cx_doubleSpinBox->setObjectName(QString::fromUtf8("cx_doubleSpinBox"));
-        cx_doubleSpinBox->setMinimum(0.01);
-        cx_doubleSpinBox->setMaximum(9999.99);
-        cx_doubleSpinBox->setSingleStep(0.01);
+        cx_doubleSpinBox->setMinimum(0.001);
+        cx_doubleSpinBox->setMaximum(9999.999);
+        cx_doubleSpinBox->setSingleStep(0.001);
         cx_doubleSpinBox->setValue(319.5);
 
         pinhole_gridLayout->addWidget(cx_doubleSpinBox, 3, 1, 1, 1);
 
         fy_doubleSpinBox = new QDoubleSpinBox(centralwidget);
         fy_doubleSpinBox->setObjectName(QString::fromUtf8("fy_doubleSpinBox"));
-        fy_doubleSpinBox->setMinimum(0.01);
-        fy_doubleSpinBox->setMaximum(9999.99);
-        fy_doubleSpinBox->setSingleStep(0.01);
+        fy_doubleSpinBox->setMinimum(0.001);
+        fy_doubleSpinBox->setMaximum(9999.999);
+        fy_doubleSpinBox->setSingleStep(0.001);
         fy_doubleSpinBox->setValue(525);
 
         pinhole_gridLayout->addWidget(fy_doubleSpinBox, 2, 1, 1, 1);
 
         fx_doubleSpinBox = new QDoubleSpinBox(centralwidget);
         fx_doubleSpinBox->setObjectName(QString::fromUtf8("fx_doubleSpinBox"));
-        fx_doubleSpinBox->setMinimum(0.01);
-        fx_doubleSpinBox->setMaximum(9999.99);
-        fx_doubleSpinBox->setSingleStep(0.01);
+        fx_doubleSpinBox->setMinimum(0.001);
+        fx_doubleSpinBox->setMaximum(9999.999);
+        fx_doubleSpinBox->setSingleStep(0.001);
         fx_doubleSpinBox->setValue(525);
 
         pinhole_gridLayout->addWidget(fx_doubleSpinBox, 1, 1, 1, 1);
@@ -863,9 +863,9 @@ public:
 
         cy_doubleSpinBox = new QDoubleSpinBox(centralwidget);
         cy_doubleSpinBox->setObjectName(QString::fromUtf8("cy_doubleSpinBox"));
-        cy_doubleSpinBox->setMinimum(0.01);
-        cy_doubleSpinBox->setMaximum(9999.99);
-        cy_doubleSpinBox->setSingleStep(0.01);
+        cy_doubleSpinBox->setMinimum(0.001);
+        cy_doubleSpinBox->setMaximum(9999.999);
+        cy_doubleSpinBox->setSingleStep(0.001);
         cy_doubleSpinBox->setValue(239.5);
 
         pinhole_gridLayout->addWidget(cy_doubleSpinBox, 4, 1, 1, 1);

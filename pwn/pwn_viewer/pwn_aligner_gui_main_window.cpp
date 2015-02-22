@@ -30,7 +30,7 @@ namespace pwn_viewer {
     std::set<std::string> filenames = _readDirectory(directory);
     for(std::set<std::string>::const_iterator it = filenames.begin(); it != filenames.end(); ++it) {
       QString listItem(&(*it)[0]);
-      if(listItem.endsWith(".pgm", Qt::CaseInsensitive)) {
+      if(listItem.endsWith(".pgm", Qt::CaseInsensitive) || listItem.endsWith(".png", Qt::CaseInsensitive)) {
 	cloud_selection_listWidget->addItem(listItem); 
       }
     } 

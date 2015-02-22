@@ -18,7 +18,7 @@ namespace pwn {
 
   void Linearizer::update() {
     assert(_aligner && "Aligner: missing _aligner");
-    
+
     // Variables initialization.
     _b = Vector6f::Zero();
     _H = Matrix6f::Zero();

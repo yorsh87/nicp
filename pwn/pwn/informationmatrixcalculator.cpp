@@ -23,11 +23,7 @@ namespace pwn {
 	if(stats.curvature() < _curvatureThreshold)
 	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
 	else {
-	  const Vector3f &eigenValues = stats.eigenValues();
-	  _nonFlatInformationMatrix.diagonal() = Normal(Vector3f(1.0f/eigenValues[0],
-								 1.0f/eigenValues[1], 
-								 1.0f/eigenValues[2]));
-	  informationMatrix[i] = U * _nonFlatInformationMatrix * U.transpose();
+	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
 	}
       } 
       else 
@@ -50,12 +46,13 @@ namespace pwn {
       U.block<3, 3>(0, 0) = stats.eigenVectors(); 
       if(imageNormals[i].squaredNorm()>0) {
 	if(stats.curvature() < _curvatureThreshold)
-	  informationMatrix[i] = _scale * (U * _flatInformationMatrix * U.transpose());
-	else 
-	  informationMatrix[i] = _scale * (U * _nonFlatInformationMatrix * U.transpose());
+	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
+	else {	  
+	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
+	}
       } 
       else 
-	informationMatrix[i] = _scale * InformationMatrix();
+	informationMatrix[i] = InformationMatrix();
     }
   }
 
