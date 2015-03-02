@@ -28,7 +28,7 @@ int main(int argc, char ** argv) {
    *********************************************************************************/
   // Usage
   if(argc < 4) {
-    std::cout << "Usage: pwn_icra_evaluator <configuration.txt> <associations.txt> <odometry.txt> <keepGoing>" << std::endl
+    std::cout << "Usage: ndt_eth_kinect_evaluate <configuration.txt> <associations.txt> <odometry.txt> <keepGoing>" << std::endl
 	      << "\tconfiguration.txt\t-->\tinput text configuration filename" << std::endl
 	      << "\tassociations.txt\t-->\tfiel containing a set of depth images associations for alignment in the format: " << std::endl
 	      << "\t\t\t\t\ttimestampReference referenceDepthImageFilename timestampCurrent currentDepthImageFilename" << std::endl

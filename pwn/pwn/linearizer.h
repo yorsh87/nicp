@@ -135,10 +135,7 @@ namespace pwn {
     inline void setZScaling(bool zScaling_) { _zScaling = zScaling_; }
 
     inline float scale() const { return _scale; }
-    inline void setScale(float scale_) { 
-      _scale = scale_; 
-      std::cerr << "Scalel: " << _scale << std::endl;
-    }
+    inline void setScale(float scale_) { _scale = scale_; }
 
   protected:
     Aligner *_aligner; /**< Pointer to the Aligner used by the Linearizer to access some Aligner's objects. */
