@@ -720,7 +720,7 @@ int main(int argc, char** argv) {
    *                               INPUT HANDLING                                  *
    *********************************************************************************/
   if(argc < 5) {
-    std::cout << "Usage: pwn_icra_evaluator <configuration.txt> <associations.txt> <odometry.txt> <enable_viewer> <groundtruth.txt>" << std::endl
+    std::cout << "Usage: nicp_eth_kinect_evaluate <configuration.txt> <associations.txt> <odometry.txt> <enable_viewer> <groundtruth.txt>" << std::endl
 	      << "\tconfiguration.txt\t-->\tinput text configuration filename" << std::endl
 	      << "\tassociations.txt\t-->\tfiel containing a set of depth images associations for alignment in the format: " << std::endl
 	      << "\t\t\t\t\ttimestampDepthImage depthImageFilename" << std::endl

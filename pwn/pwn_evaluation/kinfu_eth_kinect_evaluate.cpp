@@ -30,16 +30,14 @@ int main(int argc, char ** argv) {
    *                               INPUT HANDLING                                  *
    *********************************************************************************/
   // Usage
-  if(argc < 5) {
-    std::cout << "Usage: pwn_icra_evaluator <configuration.txt> <associations.txt> <odometry.txt> <keepGoing>" << std::endl
+  if(argc < 4) {
+    std::cout << "Usage: kinfu_eth_kinect_evaluate <configuration.txt> <associations.txt> <odometry.txt>" << std::endl
 	      << "\tconfiguration.txt\t-->\tinput text configuration filename" << std::endl
 	      << "\tassociations.txt\t-->\tfiel containing a set of depth images associations for alignment in the format: " << std::endl
 	      << "\t\t\t\t\ttimestampReference referenceDepthImageFilename timestampCurrent currentDepthImageFilename" << std::endl
-	      << "\todometry.txt\t\t-->\toutput text filename containing the computed visual odometry" << std::endl
-	      << "\tkeepGoing\t\t-->\t0 if you want to stop the evaluation when kinfu is lost, 1 otherwise" << std::endl;
+	      << "\todometry.txt\t\t-->\toutput text filename containing the computed visual odometry" << std::endl;
     return 0;
   }
-  bool keepGoing = atoi(argv[4]);
 
   // Fill input parameter map
   map<string, float> inputParameters;

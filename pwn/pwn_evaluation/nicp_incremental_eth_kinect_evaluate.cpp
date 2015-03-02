@@ -1,10 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <string> 
 #include <sys/time.h>
-
-#include <GL/gl.h>
-#include <GL/glut.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -17,7 +13,7 @@
 
 #include "pwn/bm_se3.h"
 #include "pwn/imageutils.h"
-#include "pwn/sphericalpointprojector.h"
+#include "pwn/pinholepointprojector.h"
 #include "pwn/depthimageconverterintegralimage.h"
 #include "pwn/statscalculatorintegralimage.h"
 #include "pwn/aligner.h"
@@ -53,23 +49,6 @@ protected:
   bool _standard;
 };
 
-class GLUWrapper {
-public:
-  static GLUquadricObj* getQuadradic() {
-    static GLUWrapper inst;
-    return inst._quadratic;
-  }
-protected:
-  GLUWrapper() {
-    _quadratic = gluNewQuadric();
-    gluQuadricNormals(_quadratic, GLU_SMOOTH);
-  }
-  ~GLUWrapper() {
-    gluDeleteQuadric(_quadratic);
-  }
-
-  GLUquadricObj *_quadratic;;
-};
 
 class PWNTrackerAppViewer: public PWNQGLViewer {
 public:
@@ -79,7 +58,6 @@ public:
     _spin = _spinOnce = false;
     _needRedraw = true;
     _currentTransform = Eigen::Isometry3f::Identity();
-    _currentCloud = 0;
     _drawableCurrentCloud = 0;
     _drawableReferenceScene = 0;
   }
@@ -146,22 +124,23 @@ public:
 
   void drawPyramidWireframe(float pyrH, float pyrW) {
     glLineWidth(3.0f);
+    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     glBegin(GL_LINE_LOOP);
-    glVertex3f(pyrW, -pyrW, pyrH);
-    glVertex3f(pyrW, pyrW, pyrH);
-    glVertex3f(-pyrW, pyrW, pyrH);
-    glVertex3f(-pyrW, -pyrW, pyrH);
+    glVertex3f(pyrW,-pyrW,pyrH);
+    glVertex3f(pyrW,pyrW,pyrH);
+    glVertex3f(-pyrW,pyrW,pyrH);
+    glVertex3f(-pyrW,-pyrW,pyrH);
     glEnd();
 
     glBegin(GL_LINES);
-    glVertex3f(pyrW, -pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(pyrW, pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(-pyrW, pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(-pyrW, -pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(pyrW,-pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
+    glVertex3f(pyrW,pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
+    glVertex3f(-pyrW,pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
+    glVertex3f(-pyrW,-pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
     glEnd();
   }
 
@@ -241,8 +220,6 @@ public:
       addDrawable(_drawableCurrentCloud);
     }
     else { 
-      delete _currentCloud;
-      _currentCloud = 0;
       _drawableCurrentCloud->setTransformation(transform_);      
       DrawablePoints* dp = dynamic_cast<DrawablePoints*>(_drawableCurrentCloud);
       if(dp) { 
@@ -253,7 +230,6 @@ public:
     _currentCloud = currentCloud_;
     _estimatedPoses.push_back(transform_);
     _currentTransform = transform_;
-    
     _needRedraw = true;
   }
 
@@ -261,8 +237,7 @@ public:
     DrawablePoints* dp = dynamic_cast<DrawablePoints*>(_drawableReferenceScene);    
     GLParameterPoints* pp = dynamic_cast<GLParameterPoints*>(_drawableReferenceScene->parameter());    
     if(dp && pp) {
-      pp->setColor(Eigen::Vector4f(0.8f, 0.5f, 0.5f, 1.0f));
-      // pp->setShow(false);	
+      pp->setColor(Eigen::Vector4f(0.2f, 0.2f, 0.2f, 0.75f));
       dp->updatePointDrawList(); 
     }
     _drawableReferenceScene = 0;
@@ -273,6 +248,7 @@ public:
     _groundtruthPoses.push_back(pose);
     _needRedraw = true; 
   }  
+
 
   inline bool needRedraw() const { return _needRedraw; }
   inline bool spin() const { return _spin; }
@@ -306,20 +282,21 @@ public:
     _rows = 480; 
     _cols = 640;
     _imageScaling = 1;
-    _omegaNScale = 1.0f;
     _depthScaling = 0.001f;
     _breakingAngle = M_PI / 2.0f;
     _breakingDistance = 1.0f; 
     _breakingInlierRatio = 0.75f; 
-    
+    _K << 
+    525.0f,   0.0f, 319.5f,
+      0.0f, 525.0f, 239.5f,
+      0.0f,   0.0f,   1.0f;
+
     _deltaT.setIdentity();
     _deltaT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
     _globalT.setIdentity();
     _globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
     _localT.setIdentity();
     _localT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
-    _sensorOffset.setIdentity();
-    _sensorOffset.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
 
     _currentCloud = new Cloud();
     _referenceCloud = new Cloud();
@@ -362,28 +339,10 @@ public:
       }
       else { std::cerr << "[WARNING]: startingPose has bad formatting from file, expecting 7 values but " << (*it).second.size() << " where given... keeping default values" << std::endl; }
     }
-    Vector3f sensorOffsetTranslation = Vector3f(0.0f, 0.0f, 0.0f);
-    Quaternionf sensorOffsetRotation = Quaternionf(1.0f, 0.0f, 0.0f, 0.0f);
-    if((it = inputParameters.find("sensorOffset")) != inputParameters.end()) {
-      if((*it).second.size() == 7) {
-	sensorOffsetTranslation.x() = ((*it).second)[0];
-	sensorOffsetTranslation.y() = ((*it).second)[1];
-	sensorOffsetTranslation.z() = ((*it).second)[2];
-	sensorOffsetRotation.x() = ((*it).second)[3];
-	sensorOffsetRotation.y() = ((*it).second)[4];
-	sensorOffsetRotation.z() = ((*it).second)[5];
-	sensorOffsetRotation.w() = ((*it).second)[6];
-      }
-      else { std::cerr << "[WARNING]: startingPose has bad formatting from file, expecting 7 values but " << (*it).second.size() << " where given... keeping default values" << std::endl; }
-    }
     initialRotation.normalize();
     _globalT.translation() = initialTranslation;
     _globalT.linear() = initialRotation.toRotationMatrix();
     _globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
-    sensorOffsetRotation.normalize();
-    _sensorOffset.translation() = sensorOffsetTranslation;
-    _sensorOffset.linear() = sensorOffsetRotation.toRotationMatrix();
-    _sensorOffset.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
     if((it = inputParameters.find("breakingAngle")) != inputParameters.end()) _breakingAngle = ((*it).second)[0];
     if((it = inputParameters.find("breakingDistance")) != inputParameters.end()) _breakingDistance = ((*it).second)[0];
     if((it = inputParameters.find("breakingInlierRatio")) != inputParameters.end()) _breakingInlierRatio = ((*it).second)[0];
@@ -391,7 +350,6 @@ public:
     std::cout << "[INFO]: g  depth scaling " << _depthScaling << std::endl;
     std::cout << "[INFO]: g  image scaling " << _imageScaling << std::endl;
     std::cout << "[INFO]: g  starting pose " << t2v(_globalT).transpose() << std::endl;
-    std::cout << "[INFO]: g  sensor offset " << t2v(_sensorOffset).transpose() << std::endl;
     std::cout << "[INFO]: g  breaking angle " << _breakingAngle << std::endl;
     std::cout << "[INFO]: g  breaking distance " << _breakingDistance << std::endl;
     std::cout << "[INFO]: g  breaking inlier ratio " << _breakingInlierRatio << std::endl;
@@ -399,8 +357,15 @@ public:
     else { std::cout << "[INFO]: g  running NICP " << std::endl;}
 
     // Point projector
-    if((it = inputParameters.find("horizontalFov")) != inputParameters.end()) _projector.setHorizontalFov(((*it).second)[0]);
-    if((it = inputParameters.find("verticalFov")) != inputParameters.end()) _projector.setVerticalFov(((*it).second)[0]);
+    if((it = inputParameters.find("K")) != inputParameters.end()) {
+      if((*it).second.size() == 4) {
+	_K(0, 0) = ((*it).second)[0];
+	_K(1, 1) = ((*it).second)[1];
+	_K(0, 2) = ((*it).second)[2];
+	_K(1, 2) = ((*it).second)[3];
+      }
+      else { std::cerr << "[WARNING]: K has bad formatting from file, expecting 4 values but " << (*it).second.size() << " where given... keeping default values" << std::endl; }
+    }
     if((it = inputParameters.find("minDistance")) != inputParameters.end()) _projector.setMinDistance(((*it).second)[0]);
     if((it = inputParameters.find("maxDistance")) != inputParameters.end()) _projector.setMaxDistance(((*it).second)[0]);
     if((it = inputParameters.find("imageSize")) != inputParameters.end()) {
@@ -411,13 +376,13 @@ public:
       else { std::cerr << "[WARNING]: imageSize has bad formatting from file, expecting 2 values but " << (*it).second.size() << " where given... keeping default values" << std::endl; }
     }
     _projector.setTransform(Eigen::Isometry3f::Identity());
+    _projector.setCameraMatrix(_K);
     _projector.setImageSize(_rows, _cols);
     _projector.scale(1.0f / (float)_imageScaling);    
     std::cout << "[INFO]: pp offset " << t2v(_projector.transform()).transpose() << std::endl;    
-    std::cout << "[INFO]: pp horizontal fov " << _projector.horizontalFov() << std::endl;    
-    std::cout << "[INFO]: pp vertical fov " << _projector.verticalFov() << std::endl;    
     std::cout << "[INFO]: pp minimum distance " << _projector.minDistance() << std::endl;    
     std::cout << "[INFO]: pp maximum distance " << _projector.maxDistance() << std::endl;
+    std::cout << "[INFO]: pp K " << std::endl << _projector.cameraMatrix() << std::endl;
     std::cout << "[INFO]: pp image size " << _projector.imageRows() << " --- " << _projector.imageCols() << std::endl;
 
     // Stats calculator and information matrix calculators
@@ -452,18 +417,15 @@ public:
 
     // Linearizer
     if((it = inputParameters.find("inlierMaxChi2")) != inputParameters.end()) _linearizer.setInlierMaxChi2(((*it).second)[0]);
-    if((it = inputParameters.find("robustKernel")) != inputParameters.end()) _linearizer.setRobustKernel(((*it).second)[0]);
+    if((it = inputParameters.find("robustKernel")) != inputParameters.end()) _linearizer.setRobustKernel(((*it).second)[0]);    
     if((it = inputParameters.find("zScaling")) != inputParameters.end()) _linearizer.setZScaling(((*it).second)[0]);
-    if((it = inputParameters.find("omegaNScale")) != inputParameters.end()) _linearizer.setScale(((*it).second)[0]);    
     _linearizer.setAligner(&_aligner);
-    _linearizer.setScale(_omegaNScale);
     _linearizer.setDemotedToGeneralizedICP(_demoteToGICP);
     std::cout << "[INFO]: l  inlier maximum chi2 " << _linearizer.inlierMaxChi2() << std::endl;
     if(_linearizer.robustKernel()) { std::cout << "[INFO]: l  robust kernel enabled" << std::endl; }
     else { std::cout << "[INFO]: l  robust kernel disabled" << std::endl; }
     if(_linearizer.zScaling()) { std::cout << "[INFO]: l  z scaling enabled" << std::endl; }
     else { std::cout << "[INFO]: l  z scaling disabled" << std::endl; }
-    std::cout << "[INFO]: l  normals omega scale " << _linearizer.scale() << std::endl;
     std::cout << "[INFO]: l  aligner " << _linearizer.aligner() << std::endl;
 
     // Aligner
@@ -473,7 +435,6 @@ public:
     if((it = inputParameters.find("translationalMinEigenRatio")) != inputParameters.end()) _aligner.setTranslationalMinEigenRatio(((*it).second)[0]);
     if((it = inputParameters.find("rotationalMinEigenRatio")) != inputParameters.end()) _aligner.setRotationalMinEigenRatio(((*it).second)[0]);
     if((it = inputParameters.find("lambda")) != inputParameters.end()) _aligner.setLambda(((*it).second)[0]);
-    _aligner.setSensorOffset(_sensorOffset);
     _aligner.setProjector(&_projector);
     _aligner.setCorrespondenceFinder(&_correspondenceFinder);
     _aligner.setLinearizer(&_linearizer);
@@ -483,7 +444,6 @@ public:
     std::cout << "[INFO]: a  translation minimum eigen ratio " << _aligner.translationalMinEigenRatio() << std::endl;
     std::cout << "[INFO]: a  rotational minimum eigen ratio " << _aligner.rotationalMinEigenRatio() << std::endl;
     std::cout << "[INFO]: a  lambda " << _aligner.lambda() << std::endl;
-    std::cout << "[INFO]: a  sensor offset " << t2v(_aligner.sensorOffset()).transpose() << std::endl;
     std::cout << "[INFO]: a  projector " << _aligner.projector() << std::endl;
     std::cout << "[INFO]: a  correspondence finder " << _aligner.correspondenceFinder() << std::endl;
     std::cout << "[INFO]: a  linearizer " << _aligner.linearizer() << std::endl;
@@ -607,74 +567,79 @@ public:
     }
     else { DepthImage_convert_16UC1_to_32FC1(_scaledDepth, _rawDepth, _depthScaling); }
     _scaledIndeces.create(_scaledDepth.rows, _scaledDepth.cols);
-    _currentCloud = new Cloud();
-    _converter.compute(*_currentCloud, _scaledDepth, _sensorOffset);
-    // _converter.compute(*_currentCloud, _scaledDepth, Eigen::Isometry3f::Identity());
+    _converter.compute(*_currentCloud, _scaledDepth, Eigen::Isometry3f::Identity());
     _tEnd = get_time();
     _tInput = _tEnd - _tBegin;
 
-    if(_viewer != 0 && _seq < 20) { 
-      _viewer->updateReferenceScene(_referenceCloud, _globalT);
-      _viewer->resetReferenceScene(); 
-    }
-
+    if(_viewer) { _viewer->updateReferenceScene(_referenceScene, _globalT); }
+    
     // Align the new cloud
     _aligner.setInitialGuess(deltaT);
-    _aligner.setReferenceCloud(_referenceCloud);
+    _aligner.setReferenceCloud(_referenceScene);
     _aligner.setCurrentCloud(_currentCloud);
-    std::cerr << "aligning: " << _referenceCloud->size() << " --- " << _currentCloud->size() << std::endl;
     _tBegin = get_time();
     _aligner.align();  
     _tEnd = get_time();
     _tAlign = _tEnd - _tBegin;
-    
+
     // Update structures 
-    _tBegin = get_time(); 
-    if(_aligner.solutionValid()) { _deltaT = _aligner.T(); }
-    else { _deltaT = deltaT; } 
-    deltaT = _deltaT;    
-    _globalT = _globalT * _deltaT;
+    _tBegin = get_time();   
+    _deltaT = _aligner.T();      
+    _localT = _localT * _deltaT;
+    _globalT = _globalT * _deltaT;    
+    deltaT = _deltaT;
     Eigen::Matrix3f R = _globalT.linear();
     Eigen::Matrix3f E = R.transpose() * R;
     E.diagonal().array() -= 1;
     _globalT.linear() -= 0.5 * R * E;
+    
+    _converter.projector()->project(_referenceScaledIndeces, _referenceScaledDepth, _referenceScene->points());  
+    compareDepths(_inDistance, _inNum, _outDistance, _outNum,
+		  _referenceScaledDepth, _referenceScaledIndeces, 
+		  _scaledDepth, _scaledIndeces, 
+		  0.05f, false);
+    Eigen::AngleAxisf aa(_localT.linear());
+    if(_localT.translation().norm() > _breakingDistance ||
+       fabs(aa.angle()) > _breakingAngle ||
+       (float)_inNum / (float)(_inNum + _outNum) < _breakingInlierRatio) {
+      _localT.setIdentity();
+      _referenceScene = new Cloud();
+      if(_viewer) { _viewer->resetReferenceScene(); }
+    }
+    _referenceScene->add(*_currentCloud, _deltaT);
+    _referenceScene->transformInPlace(_deltaT.inverse());
+    // voxelize(_referenceScene, 0.025f);
+    _merger.merge(_referenceScene);
     _seq++;
     _tEnd = get_time();
     _tUpdate = _tEnd - _tBegin;
+    std::cout << "[INFO]: inlier ratio " << (float)_inNum / (float)(_inNum + _outNum) << std::endl; 
 
-    if(_viewer == 0 && _referenceCloud != 0) {       
-      delete _referenceCloud; 
-      _referenceCloud = 0;
-    }
+    if(_viewer) { _viewer->updateCurrentCloud(_currentCloud, _globalT * _deltaT.inverse()); }
     
-    _referenceCloud = _currentCloud;
-    if(_viewer != 0) { _viewer->updateCurrentCloud(_currentCloud, _globalT); }
-    std::cout << "[INFO]: eigen translational ratio " << _aligner.translationalEigenRatio() << std::endl;
-    std::cout << "[INFO]: eigen rotational ratio " << _aligner.rotationalEigenRatio() << std::endl;
-    std::cout << "[INFO]: inliers " << _aligner.inliers() << std::endl;
     std::cout << "[INFO]: timings [input: " << _tInput << "] "
 	      << "[align: " << _tAlign << "] "
 	      << "[update: " << _tUpdate << "] "
 	      << "[total: " << _tInput + _tAlign + _tUpdate << "]" << std::endl;
 
-    return _tAlign; 
+    return _tAlign + _tUpdate; 
   }
 
 protected:
   double _tBegin, _tEnd;
   double _tInput, _tAlign, _tUpdate; 
-
+  
   bool _demoteToGICP;
   int _seq;
   int _rows, _cols;
   int _imageScaling;
   int _inNum, _outNum;
-  float _omegaNScale;
   float _inDistance, _outDistance; 
   float _depthScaling;
   float _breakingAngle, _breakingDistance, _breakingInlierRatio;   
+  Matrix3f _K;
 
-  Eigen::Isometry3f _deltaT, _globalT, _localT, _sensorOffset;
+  Eigen::Isometry3f _deltaT, _globalT, _localT;
 
   RawDepthImage _rawDepth;
   DepthImage _depth, _scaledDepth, _referenceScaledDepth;
@@ -683,7 +648,7 @@ protected:
   Cloud* _referenceCloud;
   Cloud* _currentCloud;
 
-  SphericalPointProjector _projector;
+  PinholePointProjector _projector;
   StatsCalculatorIntegralImage _statsCalculator;  
   PointInformationMatrixCalculator _pointInformationMatrixCalculator;
   NormalInformationMatrixCalculator _normalInformationMatrixCalculator;  
@@ -739,7 +704,7 @@ int main(int argc, char** argv) {
    *                               INPUT HANDLING                                  *
    *********************************************************************************/
   if(argc < 5) {
-    std::cout << "Usage: pwn_icra_evaluator <configuration.txt> <associations.txt> <odometry.txt> <enable_viewer> <groundtruth.txt>" << std::endl
+    std::cout << "Usage: nicp_incremental_eth_kinect_evaluate <configuration.txt> <associations.txt> <odometry.txt> <enable_viewer> <groundtruth.txt>" << std::endl
 	      << "\tconfiguration.txt\t-->\tinput text configuration filename" << std::endl
 	      << "\tassociations.txt\t-->\tfiel containing a set of depth images associations for alignment in the format: " << std::endl
 	      << "\t\t\t\t\ttimestampDepthImage depthImageFilename" << std::endl
@@ -779,7 +744,7 @@ int main(int argc, char** argv) {
    *********************************************************************************/
   QApplication application(argc, argv);
   QWidget* mainWindow = new QWidget();
-  mainWindow->setWindowTitle("nicp_tracker_app");
+  mainWindow->setWindowTitle("nicp_scene_tracker_app");
   QHBoxLayout* viewerLayout = new QHBoxLayout();
   mainWindow->setLayout(viewerLayout);
   PWNTrackerAppViewer* viewer = new PWNTrackerAppViewer(mainWindow);

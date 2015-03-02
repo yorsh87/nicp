@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
   // Print usage
   if(argc < 4) {
     std::cout << "USAGE: ";
-    std::cout << "pwn_generate_kinfu_associations skip_rate fullAssociationsFilename.txt associations.txt" << std::endl;
+    std::cout << "pwn_generate_cropped_associations skip_rate fullAssociationsFilename.txt associations.txt" << std::endl;
     std::cout << "   skip_rate.txt \t-->\t take a depth image each skip_rate depth images read" << std::endl;
     std::cout << "   fullAssociationsFilename.txt.txt \t-->\t input text filename containing the full associations list of depth and rgb images" << std::endl;
     std::cout << "   associationsFilename.txt \t-->\t output text filename containing the computed associations" << std::endl;
