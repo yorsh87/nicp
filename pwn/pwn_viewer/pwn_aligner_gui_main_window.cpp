@@ -118,7 +118,7 @@ namespace pwn_viewer {
   }
 
   void PwnAlignerGuiMainWindow::correspondencesUpdate() { 
-    _correspondenceFinder->setInlierNormalAngularThreshold(cosf(normal_angle_doubleSpinBox->value()));
+    _correspondenceFinder->setInlierNormalAngularThreshold(normal_angle_doubleSpinBox->value());
     _correspondenceFinder->setFlatCurvatureThreshold(curv_flatness_doubleSpinBox->value());
     _correspondenceFinder->setInlierCurvatureRatioThreshold(curv_ratio_doubleSpinBox->value());
     _correspondenceFinder->setInlierDistanceThreshold(point_distance_doubleSpinBox->value());

@@ -286,6 +286,9 @@ namespace pwn {
      */    
     inline float rotationalEigenRatio() { return _rotationalEigenRatio; }
 
+    inline float lambda() { return _lambda; }
+    inline void setLambda(const float lambda_) { _lambda = lambda_; }
+
     /**
      *  Method that returns a pointer to the correspondence finder used by the Aligner.
      *  @return a pointer to the aligner's correspondence finder.
@@ -406,6 +409,7 @@ namespace pwn {
     int _inliers; /**< Number of inliers found applying the resulting alignment transformation. */
     double _totalTime; /**< Total time needed to find an alignment. */
     float _error; /**< Error associated to the resulting alignment transformation. */
+    float _lambda;
     float  _translationalEigenRatio; /**< Ratio of the translational part of the resulting alignment transformation. */
     float _rotationalEigenRatio; /**< Ratio of the rotational part of the resulting alignment transformation. */
     float _translationalMinEigenRatio; /**< Minimum translational ratio for which above it the resulting transformation is not considered valid. */

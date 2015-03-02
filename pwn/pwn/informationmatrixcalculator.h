@@ -148,9 +148,9 @@ namespace pwn {
      *  This constructor creates a NormalInformationMatrixCalculator with default values for all its attributes.
      */
     NormalInformationMatrixCalculator() : InformationMatrixCalculator() {
-      _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(0.001f, 1000.0f, 1000.0f));
-      // _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(10000.0f, 0.001f, 1000.0f));
-      _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 1.0f, 1.0f));
+       _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
+       // _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(100000.0f, 0.00001f, 100000.0f));
+      _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(0.1f, 1.0f, 1.0f));
       _curvatureThreshold = 0.02f;
     }
 

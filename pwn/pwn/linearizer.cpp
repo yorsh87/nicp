@@ -13,6 +13,7 @@ namespace pwn {
     _inlierMaxChi2 = 9e3;
     _robustKernel = true;
     _demotedToGeneralizedICP = false;
+    _zScaling = true;
     _scale = 1.0f;
   }
 
@@ -60,8 +61,13 @@ namespace pwn {
 	const Normal referenceNormal = _T * _aligner->referenceCloud()->normals()[correspondence.referenceIndex];
 	const Point &currentPoint = _aligner->currentCloud()->points()[correspondence.currentIndex];
 	const Normal &currentNormal = _aligner->currentCloud()->normals()[correspondence.currentIndex];
-	const InformationMatrix &omegaP = pointOmegas[correspondence.currentIndex];	
+	InformationMatrix omegaP = pointOmegas[correspondence.currentIndex];	
 	InformationMatrix omegaN = _scale * normalOmegas[correspondence.currentIndex];
+	if(_zScaling) {
+	  omegaP *= 1.0f / fabs(currentPoint.z());
+	  omegaN *= 1.0f / fabs(currentPoint.z());
+	}
+	
 	if(_demotedToGeneralizedICP) { omegaN.setZero(); }
       
 	const Vector4f pointError = referencePoint - currentPoint;

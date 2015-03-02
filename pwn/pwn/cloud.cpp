@@ -272,6 +272,18 @@ namespace pwn {
     }
   };
 
+  struct StatsAccumulator {
+    StatsAccumulator() {
+      acc = 0;
+      u = Eigen::Vector3f::Zero();
+      omega = Eigen::Matrix3f::Zero();
+    }
+
+    int acc;
+    Eigen::Vector3f u;    
+    Eigen::Matrix3f omega;
+  };
+
   void voxelize(Cloud* model, float res) {
     float ires = 1.0f / res;
     std::vector<IndexTriplet> voxels(model->size());
@@ -280,74 +292,87 @@ namespace pwn {
     sparseModel.resize(model->size());
     std::sort(voxels.begin(), voxels.end());
     int k = -1;
+    std::vector<StatsAccumulator> statsAccs;
+    statsAccs.resize(model->size());
+    std::fill(statsAccs.begin(), statsAccs.begin(), StatsAccumulator());
     for(size_t i = 0; i < voxels.size(); i++) { 
       IndexTriplet& triplet = voxels[i];
       int idx = triplet.index;
-      if(k >= 0 && voxels[i].sameCell(voxels[i-1])) { 
-	sparseModel.points()[k] += model->points()[idx]; 
-	sparseModel.gaussians()[k] = model->gaussians()[idx];
+      StatsAccumulator& statsAcc = statsAccs[i];
+      if(k >= 0 && voxels[i].sameCell(voxels[i-1])) { 	
+	Eigen::Matrix3f U = model->stats()[idx].eigenVectors();
+	Eigen::Vector3f lambdas = model->stats()[idx].eigenValues();
+	Eigen::Matrix3f sigma = U * Diagonal3f(lambdas.x(), lambdas.y(), lambdas.z()) * U.inverse(); 
+	Eigen::Matrix3f omega = sigma.inverse();
+	statsAcc.omega += omega;
+	statsAcc.u += omega * model->stats()[idx].mean().head<3>();
+	statsAcc.acc++;
       } 
       else {
 	k++;
+	Eigen::Matrix3f U = model->stats()[idx].eigenVectors();
+	Eigen::Vector3f lambdas = model->stats()[idx].eigenValues();
+	Eigen::Matrix3f sigma = U * Diagonal3f(lambdas.x(), lambdas.y(), lambdas.z()) * U.inverse(); 
+	Eigen::Matrix3f omega = sigma.inverse();
+	statsAcc.omega += omega;
+	statsAcc.u += omega * model->stats()[idx].mean().head<3>();
+	statsAcc.acc++;
 	sparseModel.points()[k] = model->points()[idx];
+	sparseModel.normals()[k] = model->normals()[idx];
+	sparseModel.stats()[k] = model->stats()[idx];
+	sparseModel.pointInformationMatrix()[k] = model->pointInformationMatrix()[idx];
+	sparseModel.normalInformationMatrix()[k] = model->normalInformationMatrix()[idx];
 	sparseModel.gaussians()[k] = model->gaussians()[idx];
       } 
     }
     sparseModel.resize(k); 
-    model->resize(k);
-    for(size_t i = 0; i < sparseModel.size(); i++) { 
-      Point& p = sparseModel.points()[i];
-      p = p / p[3];
-      model->points()[i] = p;
-      model->gaussians()[i] = sparseModel.gaussians()[i];
+    statsAccs.resize(k);
+    *model = sparseModel;
+    
+    InformationMatrix _flatPointInformationMatrix = InformationMatrix::Zero();
+    InformationMatrix _nonFlatPointInformationMatrix = InformationMatrix::Zero();
+    InformationMatrix _flatNormalInformationMatrix = InformationMatrix::Zero();
+    InformationMatrix _nonFlatNormalInformationMatrix = InformationMatrix::Zero();
+    _flatPointInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
+    _nonFlatPointInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 0.1f, 0.1f));
+    _flatNormalInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
+    _nonFlatNormalInformationMatrix.diagonal() = Normal(Eigen::Vector3f(0.1f, 1.0f, 1.0f));
+    for(size_t i = 0; i < model->size(); i++) { 
+      StatsAccumulator& statsAcc = statsAccs[i];
+      if(statsAcc.acc > 1) {
+	statsAcc.u = statsAcc.omega * statsAcc.u;      
+	Point& p = model->points()[i];
+	p = statsAcc.u;      
+            
+	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenSolver;
+	eigenSolver.computeDirect(statsAcc.omega.inverse(), Eigen::ComputeEigenvectors);
+	Stats& stats = model->stats()[i]; 
+	stats.setZero();
+	stats.setEigenVectors(eigenSolver.eigenvectors());
+	stats.setMean(statsAcc.u);
+	InformationMatrix U = Eigen::Matrix4f::Zero();
+	U.block<3, 3>(0, 0)  = eigenSolver.eigenvectors();
+	Eigen::Vector3f eigenValues = eigenSolver.eigenvalues();
+	if(eigenValues(0) < 0.0f) { eigenValues(0) = 0.0f; }	  
+	stats.setEigenValues(eigenValues);
+	stats.setN(statsAcc.acc);
+
+	Normal& n = model->normals()[i];
+	n = stats.block<4, 1>(0, 0);
+	if(stats.curvature() < 0.3f) {
+	  if(n.dot(p) > 0) { n = -n; }
+	} 
+	else { n.setZero(); }      
+
+	if(stats.curvature() < 0.1f) {
+	  model->pointInformationMatrix()[i] = U * _flatPointInformationMatrix * U.transpose();
+	  model->normalInformationMatrix()[i] = U * _flatNormalInformationMatrix * U.transpose();
+	}
+	else {
+	  model->pointInformationMatrix()[i] = U * _nonFlatPointInformationMatrix * U.transpose();
+	  model->normalInformationMatrix()[i] = U * _nonFlatNormalInformationMatrix * U.transpose();
+	}
+      }
     }
   }
-
-  // void voxelize(Cloud* model, float res) {
-  //   float ires = 1.0f / res;
-  //   std::vector<IndexTriplet> voxels(model->size());
-  //   for(int i = 0; i < (int)model->size(); i++) { voxels[i] = IndexTriplet(model->points()[i], i , ires); }
-  //   Cloud sparseModel;
-  //   sparseModel.resize(model->size());
-  //   std::sort(voxels.begin(), voxels.end());
-  //   int k = -1;
-  //   for(size_t i = 0; i < voxels.size(); i++) { 
-  //     IndexTriplet& triplet = voxels[i];
-  //     int idx = triplet.index;
-  //     if(k >= 0 && voxels[i].sameCell(voxels[i-1])) { 
-  // 	sparseModel.points()[k] += model->points()[idx]; 
-  // 	sparseModel.normals()[k] = model->normals()[idx];
-  // 	sparseModel.stats()[k] = model->stats()[idx];
-  // 	sparseModel.pointInformationMatrix()[k] = model->pointInformationMatrix()[idx];
-  // 	sparseModel.normalInformationMatrix()[k] = model->normalInformationMatrix()[idx];
-  // 	sparseModel.gaussians()[k] = model->gaussians()[idx];
-  // 	if(model->rgbs().size() > 0) { sparseModel.rgbs()[k] = model->rgbs()[idx]; }
-  //     } 
-  //     else {
-  // 	k++;
-  // 	sparseModel.points()[k] = model->points()[idx];
-  // 	sparseModel.normals()[k] = model->normals()[idx];
-  // 	sparseModel.stats()[k] = model->stats()[idx];
-  // 	sparseModel.pointInformationMatrix()[k] = model->pointInformationMatrix()[idx];
-  // 	sparseModel.normalInformationMatrix()[k] = model->normalInformationMatrix()[idx];
-  // 	sparseModel.gaussians()[k] = model->gaussians()[idx];
-  // 	if(model->rgbs().size() > 0) { sparseModel.rgbs()[k] = model->rgbs()[idx]; }
-  //     } 
-  //   }
-  //   sparseModel.resize(k); 
-  //   model->resize(k);
-  //   for(size_t i = 0; i < sparseModel.size(); i++) { 
-  //     Point& p = sparseModel.points()[i];
-  //     p = p / p[3];
-  //     model->points()[i] = p;
-  //     model->points()[i] = sparseModel.points()[i];
-  //     model->normals()[i] = sparseModel.normals()[i];
-  //     model->stats()[i] = sparseModel.stats()[i];
-  //     model->pointInformationMatrix()[i] = sparseModel.pointInformationMatrix()[i];
-  //     model->normalInformationMatrix()[i] = sparseModel.normalInformationMatrix()[i];
-  //     model->gaussians()[i] = sparseModel.gaussians()[i];
-  //     if(model->rgbs().size() > 0) { model->rgbs()[i] = sparseModel.rgbs()[i]; }
-  //   }
-  // }
-
 }

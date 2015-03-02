@@ -13,6 +13,7 @@ namespace pwn {
     _flatCurvatureThreshold = 0.02f;
     _inlierCurvatureRatioThreshold = 1.3f;
     _numCorrespondences = 0;
+    _correspondences.clear();
     _rows = 0;
     _cols = 0;
     _rowSearchRegion = 0;

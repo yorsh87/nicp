@@ -37,6 +37,7 @@ namespace pwn {
     _rotationalMinEigenRatio = 50;
     _translationalMinEigenRatio = 50;
     _debug = false;
+    _lambda = 1e3;
   };
 
   void Aligner::addRelativePrior(const Eigen::Isometry3f &mean, const Matrix6f &informationMatrix) {
@@ -70,12 +71,11 @@ namespace pwn {
     _projector->project(_correspondenceFinder->currentIndexImage(),
 			_correspondenceFinder->currentDepthImage(),
 			_currentCloud->points());
-
+        
     if (_currentCloud->rgbs().size())
       _currentCloud->projectRGB(_correspondenceFinder->currentRGBImage(), 
 				_correspondenceFinder->currentIndexImage());
     _T = _initialGuess;
-        
     for(int i = 0; i < _outerIterations; i++) {
       /************************************************************************
        *                         Correspondence Computation                   *
@@ -90,11 +90,10 @@ namespace pwn {
       if (_referenceCloud->rgbs().size())
 	_referenceCloud->projectRGB(_correspondenceFinder->referenceRGBImage(), 
 				    _correspondenceFinder->referenceIndexImage());
-    
+
       // Correspondences computation.  
       _correspondenceFinder->compute(*_referenceCloud, *_currentCloud, _T.inverse());
-    
-// std::cerr << "NumCorrespondence: " << _correspondenceFinder->correspondences().size() << std::endl;
+
       /************************************************************************
        *                            Alignment                                 *
        ************************************************************************/
@@ -108,7 +107,7 @@ namespace pwn {
 	_linearizer->update();
 	H = _linearizer->H();
 	b = _linearizer->b();
-	H += Matrix6f::Identity() * 1000.0f;
+	H += Matrix6f::Identity() * _lambda;
 
 	// Add the priors
 	for(size_t j = 0; j < _priors.size(); j++) {
@@ -128,7 +127,7 @@ namespace pwn {
 	Eigen::Isometry3f dT = v2t(dx);
 	invT = dT * invT;
       }
-      
+
       _T = invT.inverse();
       _T = v2t(t2v(_T));
       _T.matrix().block<1, 4>(3, 0) << 0.0f, 0.0f, 0.0f, 1.0f;
@@ -146,18 +145,18 @@ namespace pwn {
 	_translationalEigenRatio > _translationalMinEigenRatio) {
       _solutionValid = false;
       if (_debug) {
-	cerr << endl;
-	cerr << "************** WARNING SOLUTION MIGHT BE INVALID (eigenratio failure) **************" << endl;
-	cerr << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
-	cerr << "************************************************************************************" << endl;
+	cout << endl;
+	cout << "************** WARNING SOLUTION MIGHT BE INVALID (eigenratio failure) **************" << endl;
+	cout << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
+	cout << "************************************************************************************" << endl;
       }
     } 
     else {
       _solutionValid = true;
       if (_debug) {
-	cerr << "************** I FOUND SOLUTION VALID SOLUTION   (eigenratio ok) *******************" << endl;
-	cerr << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
-	cerr << "************************************************************************************" << endl;
+	cout << "************** I FOUND SOLUTION VALID SOLUTION   (eigenratio ok) *******************" << endl;
+	cout << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
+	cout << "************************************************************************************" << endl;
       }
     }
     if (_debug) {

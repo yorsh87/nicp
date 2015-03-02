@@ -131,6 +131,9 @@ namespace pwn {
     inline bool demotedToGeneralizedICP() const { return _demotedToGeneralizedICP; }
     inline void setDemotedToGeneralizedICP(bool demotedToGeneralizedICP_) { _demotedToGeneralizedICP = demotedToGeneralizedICP_; }
 
+    inline bool zScaling() const { return _zScaling; }
+    inline void setZScaling(bool zScaling_) { _zScaling = zScaling_; }
+
     inline float scale() const { return _scale; }
     inline void setScale(float scale_) { 
       _scale = scale_; 
@@ -150,6 +153,7 @@ namespace pwn {
     bool _robustKernel; /**< Bool value used to say to the Linearizer to use robust kernel mode or not. */
 
     bool _demotedToGeneralizedICP;
+    bool _zScaling;
     float _scale;
   };
 

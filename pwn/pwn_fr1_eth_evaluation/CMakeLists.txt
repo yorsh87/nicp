@@ -43,3 +43,21 @@ TARGET_LINK_LIBRARIES(nicp_tracker_app
   ${QGLVIEWER_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} 
   ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 
 )
+
+ADD_EXECUTABLE(nicp_scene_tracker_app nicp_scene_tracker_app.cpp)
+SET_TARGET_PROPERTIES(nicp_scene_tracker_app PROPERTIES OUTPUT_NAME nicp_scene_tracker_app)
+TARGET_LINK_LIBRARIES(nicp_scene_tracker_app 
+  ${OpenCV_LIBS} 
+  pwn pwn_viewer
+  ${QGLVIEWER_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} 
+  ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 
+)
+
+ADD_EXECUTABLE(nicp_eth_laser_evaluate nicp_eth_laser_evaluate.cpp)
+SET_TARGET_PROPERTIES(nicp_eth_laser_evaluate PROPERTIES OUTPUT_NAME nicp_eth_laser_evaluate)
+TARGET_LINK_LIBRARIES(nicp_eth_laser_evaluate 
+  ${OpenCV_LIBS} 
+  pwn pwn_viewer
+  ${QGLVIEWER_LIBRARY} ${QT_QTXML_LIBRARY} ${QT_QTOPENGL_LIBRARY} ${QT_QTGUI_LIBRARY} ${QT_QTCORE_LIBRARY} 
+  ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} 
+)

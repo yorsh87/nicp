@@ -1,10 +1,6 @@
 #include <iostream>
 #include <fstream>
-#include <string> 
 #include <sys/time.h>
-
-#include <GL/gl.h>
-#include <GL/glut.h>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
@@ -53,23 +49,6 @@ protected:
   bool _standard;
 };
 
-class GLUWrapper {
-public:
-  static GLUquadricObj* getQuadradic() {
-    static GLUWrapper inst;
-    return inst._quadratic;
-  }
-protected:
-  GLUWrapper() {
-    _quadratic = gluNewQuadric();
-    gluQuadricNormals(_quadratic, GLU_SMOOTH);
-  }
-  ~GLUWrapper() {
-    gluDeleteQuadric(_quadratic);
-  }
-
-  GLUquadricObj *_quadratic;;
-};
 
 class PWNTrackerAppViewer: public PWNQGLViewer {
 public:
@@ -79,7 +58,6 @@ public:
     _spin = _spinOnce = false;
     _needRedraw = true;
     _currentTransform = Eigen::Isometry3f::Identity();
-    _currentCloud = 0;
     _drawableCurrentCloud = 0;
     _drawableReferenceScene = 0;
   }
@@ -146,22 +124,23 @@ public:
 
   void drawPyramidWireframe(float pyrH, float pyrW) {
     glLineWidth(3.0f);
+    glColor4f(0.0f, 0.0f, 0.0f, 1.0f);
     glBegin(GL_LINE_LOOP);
-    glVertex3f(pyrW, -pyrW, pyrH);
-    glVertex3f(pyrW, pyrW, pyrH);
-    glVertex3f(-pyrW, pyrW, pyrH);
-    glVertex3f(-pyrW, -pyrW, pyrH);
+    glVertex3f(pyrW,-pyrW,pyrH);
+    glVertex3f(pyrW,pyrW,pyrH);
+    glVertex3f(-pyrW,pyrW,pyrH);
+    glVertex3f(-pyrW,-pyrW,pyrH);
     glEnd();
 
     glBegin(GL_LINES);
-    glVertex3f(pyrW, -pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(pyrW, pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(-pyrW, pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
-    glVertex3f(-pyrW, -pyrW, pyrH);
-    glVertex3f(0.0f, 0.0f, 0.0f);
+    glVertex3f(pyrW,-pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
+    glVertex3f(pyrW,pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
+    glVertex3f(-pyrW,pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
+    glVertex3f(-pyrW,-pyrW,pyrH);
+    glVertex3f(0.0,0.0,0.0);
     glEnd();
   }
 
@@ -241,8 +220,6 @@ public:
       addDrawable(_drawableCurrentCloud);
     }
     else { 
-      delete _currentCloud;
-      _currentCloud = 0;
       _drawableCurrentCloud->setTransformation(transform_);      
       DrawablePoints* dp = dynamic_cast<DrawablePoints*>(_drawableCurrentCloud);
       if(dp) { 
@@ -253,7 +230,6 @@ public:
     _currentCloud = currentCloud_;
     _estimatedPoses.push_back(transform_);
     _currentTransform = transform_;
-    
     _needRedraw = true;
   }
 
@@ -261,8 +237,7 @@ public:
     DrawablePoints* dp = dynamic_cast<DrawablePoints*>(_drawableReferenceScene);    
     GLParameterPoints* pp = dynamic_cast<GLParameterPoints*>(_drawableReferenceScene->parameter());    
     if(dp && pp) {
-      pp->setColor(Eigen::Vector4f(0.8f, 0.5f, 0.5f, 1.0f));
-      // pp->setShow(false);	
+      pp->setColor(Eigen::Vector4f(0.2f, 0.2f, 0.2f, 0.75f));
       dp->updatePointDrawList(); 
     }
     _drawableReferenceScene = 0;
@@ -273,6 +248,7 @@ public:
     _groundtruthPoses.push_back(pose);
     _needRedraw = true; 
   }  
+
 
   inline bool needRedraw() const { return _needRedraw; }
   inline bool spin() const { return _spin; }
@@ -591,60 +567,68 @@ public:
     }
     else { DepthImage_convert_16UC1_to_32FC1(_scaledDepth, _rawDepth, _depthScaling); }
     _scaledIndeces.create(_scaledDepth.rows, _scaledDepth.cols);
-    _currentCloud = new Cloud();
     _converter.compute(*_currentCloud, _scaledDepth, Eigen::Isometry3f::Identity());
     _tEnd = get_time();
     _tInput = _tEnd - _tBegin;
 
-    if(_viewer != 0 && _seq < 20) { 
-      _viewer->updateReferenceScene(_referenceCloud, _globalT);
-      _viewer->resetReferenceScene(); 
-    }
-
+    if(_viewer) { _viewer->updateReferenceScene(_referenceScene, _globalT); }
+    
     // Align the new cloud
     _aligner.setInitialGuess(deltaT);
-    _aligner.setReferenceCloud(_referenceCloud);
+    _aligner.setReferenceCloud(_referenceScene);
     _aligner.setCurrentCloud(_currentCloud);
     _tBegin = get_time();
     _aligner.align();  
     _tEnd = get_time();
     _tAlign = _tEnd - _tBegin;
-    
+
     // Update structures 
-    _tBegin = get_time(); 
-    if(_aligner.solutionValid()) { _deltaT = _aligner.T(); }
-    else { _deltaT = deltaT; } 
-    deltaT = _deltaT;    
-    _globalT = _globalT * _deltaT;
+    _tBegin = get_time();   
+    _deltaT = _aligner.T();      
+    _localT = _localT * _deltaT;
+    _globalT = _globalT * _deltaT;    
+    deltaT = _deltaT;
     Eigen::Matrix3f R = _globalT.linear();
     Eigen::Matrix3f E = R.transpose() * R;
     E.diagonal().array() -= 1;
     _globalT.linear() -= 0.5 * R * E;
+    
+    _converter.projector()->project(_referenceScaledIndeces, _referenceScaledDepth, _referenceScene->points());  
+    compareDepths(_inDistance, _inNum, _outDistance, _outNum,
+		  _referenceScaledDepth, _referenceScaledIndeces, 
+		  _scaledDepth, _scaledIndeces, 
+		  0.05f, false);
+    Eigen::AngleAxisf aa(_localT.linear());
+    if(_localT.translation().norm() > _breakingDistance ||
+       fabs(aa.angle()) > _breakingAngle ||
+       (float)_inNum / (float)(_inNum + _outNum) < _breakingInlierRatio) {
+      _localT.setIdentity();
+      _referenceScene = new Cloud();
+      if(_viewer) { _viewer->resetReferenceScene(); }
+    }
+    _referenceScene->add(*_currentCloud, _deltaT);
+    _referenceScene->transformInPlace(_deltaT.inverse());
+    // voxelize(_referenceScene, 0.025f);
+    _merger.merge(_referenceScene);
     _seq++;
     _tEnd = get_time();
     _tUpdate = _tEnd - _tBegin;
+    std::cout << "[INFO]: inlier ratio " << (float)_inNum / (float)(_inNum + _outNum) << std::endl; 
 
-    if(_viewer == 0 && _referenceCloud != 0) {       
-      delete _referenceCloud; 
-      _referenceCloud = 0;
-    }
+    if(_viewer) { _viewer->updateCurrentCloud(_currentCloud, _globalT * _deltaT.inverse()); }
     
-    _referenceCloud = _currentCloud;
-    if(_viewer != 0) { _viewer->updateCurrentCloud(_currentCloud, _globalT); }
-    std::cout << "[INFO]: eigen translational ratio " << _aligner.translationalEigenRatio() << std::endl;
-    std::cout << "[INFO]: eigen rotational ratio " << _aligner.rotationalEigenRatio() << std::endl;
     std::cout << "[INFO]: timings [input: " << _tInput << "] "
 	      << "[align: " << _tAlign << "] "
 	      << "[update: " << _tUpdate << "] "
 	      << "[total: " << _tInput + _tAlign + _tUpdate << "]" << std::endl;
 
-    return _tAlign; 
+    return _tAlign + _tUpdate; 
   }
 
 protected:
   double _tBegin, _tEnd;
   double _tInput, _tAlign, _tUpdate; 
-
+  
   bool _demoteToGICP;
   int _seq;
   int _rows, _cols;
@@ -760,7 +744,7 @@ int main(int argc, char** argv) {
    *********************************************************************************/
   QApplication application(argc, argv);
   QWidget* mainWindow = new QWidget();
-  mainWindow->setWindowTitle("nicp_tracker_app");
+  mainWindow->setWindowTitle("nicp_scene_tracker_app");
   QHBoxLayout* viewerLayout = new QHBoxLayout();
   mainWindow->setLayout(viewerLayout);
   PWNTrackerAppViewer* viewer = new PWNTrackerAppViewer(mainWindow);

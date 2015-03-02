@@ -23,7 +23,7 @@ namespace pwn {
 	if(stats.curvature() < _curvatureThreshold)
 	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
 	else {
-	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
+	  informationMatrix[i] = U * _nonFlatInformationMatrix * U.transpose();
 	}
       } 
       else 
@@ -48,7 +48,7 @@ namespace pwn {
 	if(stats.curvature() < _curvatureThreshold)
 	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
 	else {	  
-	  informationMatrix[i] = U * _flatInformationMatrix * U.transpose();
+	  informationMatrix[i] = U * _nonFlatInformationMatrix * U.transpose();
 	}
       } 
       else 
