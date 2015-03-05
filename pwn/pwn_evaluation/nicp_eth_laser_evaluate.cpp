@@ -107,7 +107,8 @@ public:
 
   virtual void init() {
     PWNQGLViewer::init();
-    setBackgroundColor(QColor::fromRgb(100, 100, 100));
+    // setBackgroundColor(QColor::fromRgb(100, 100, 100));
+    setBackgroundColor(QColor::fromRgb(255, 255, 255));
     setMouseBinding(Qt::ControlModifier, Qt::LeftButton, RAP_FROM_PIXEL);
     qglviewer::Camera* oldcam = camera();
     qglviewer::Camera* cam = new StandardCamera();
@@ -298,7 +299,7 @@ class PWNTrackerApp {
 public:
   PWNTrackerApp(const std::string& configurationFile, PWNTrackerAppViewer* viewer_ = 0) { 
     _viewer = viewer_;
-    if(_viewer) { std::cout << "[INFO] g  enabled viewer " << _viewer << std::endl; }
+    if(_viewer) { std::cout << "[INFO]: g  enabled viewer " << _viewer << std::endl; }
     else { std::cout << "[INFO]: g  disabled viewer " << _viewer << std::endl; }
 
     _demoteToGICP = false;
@@ -454,7 +455,7 @@ public:
     if((it = inputParameters.find("inlierMaxChi2")) != inputParameters.end()) _linearizer.setInlierMaxChi2(((*it).second)[0]);
     if((it = inputParameters.find("robustKernel")) != inputParameters.end()) _linearizer.setRobustKernel(((*it).second)[0]);
     if((it = inputParameters.find("zScaling")) != inputParameters.end()) _linearizer.setZScaling(((*it).second)[0]);
-    if((it = inputParameters.find("omegaNScale")) != inputParameters.end()) _linearizer.setScale(((*it).second)[0]);    
+    if((it = inputParameters.find("omegaNScale")) != inputParameters.end()) _omegaNScale = ((*it).second)[0];    
     _linearizer.setAligner(&_aligner);
     _linearizer.setScale(_omegaNScale);
     _linearizer.setDemotedToGeneralizedICP(_demoteToGICP);
@@ -612,7 +613,7 @@ public:
     _tEnd = get_time();
     _tInput = _tEnd - _tBegin;
 
-    if(_viewer != 0) { 
+    if(_viewer != 0 ) { 
       _viewer->updateReferenceScene(_referenceCloud, _globalT);
       _viewer->resetReferenceScene(); 
     }

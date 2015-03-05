@@ -608,8 +608,8 @@ public:
     }
     _referenceScene->add(*_currentCloud, _deltaT);
     _referenceScene->transformInPlace(_deltaT.inverse());
-    // voxelize(_referenceScene, 0.025f);
-    _merger.merge(_referenceScene);
+    voxelize(_referenceScene, 0.025f);
+    // _merger.merge(_referenceScene);
     _seq++;
     _tEnd = get_time();
     _tUpdate = _tEnd - _tBegin;
