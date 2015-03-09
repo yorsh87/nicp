@@ -60,16 +60,12 @@ namespace pwn_viewer {
       for(size_t i = 0; i < _points->size(); i += pointsParameter->step()) {      	
 	const Point &p = _points->at(i);
 	const Normal &n = _normals->at(i);
-	// if(n.y() > 0.0f) { continue; }
-	
-	// Point tp = _transformation * _points->at(i);
-      	// if(tp.y() < -1.4f) { continue; }
 	if(_rgbs && _rgbs->size() > 0) { 
 	  cv::Vec3b c=_rgbs->at(i);
 	  glColor3f(scale*c[0], scale*c[1], scale*c[2]);
 	}
-	glColor4f(fabs(n[0]), fabs(n[1]), fabs(n[2]), 1.0f);
-      	glNormal3f(n[0], n[1], n[2]);
+	// glColor4f(fabs(n[0]), fabs(n[1]), fabs(n[2]), 1.0f);
+	glNormal3f(n[0], n[1], n[2]);
       	glVertex3f(p[0], p[1], p[2]);
       }    
       glEnd();

@@ -64,15 +64,15 @@ do
 	    echo -n "Running GICP..."
 	    ${BIN_DIR}/nicp_eth_kinect_evaluate ${CONF_DIR}/gicp_eth_kinect.conf associations.txt ${RESULTS_DIR}/gicp_odometry_${DATASET_NAME}.txt 0 > ${LOGS_DIR}/gicp_log_${DATASET_NAME}.txt
 	    echo " done"
-	    # echo -n "Running DVO..."
-	    # roslaunch dvo_benchmark benchmark.launch output_dir:=${RESULTS_DIR} dataset:=${PWD} associations_file:=associations.txt groundtruth_file:=groundtruth.txt odometry_file:=dvo_odometry_${DATASET_NAME}.txt camera_matrix_file:=camera.txt scale:=1000 > ${LOGS_DIR}/dvo_log_${DATASET_NAME}.txt
-	    # echo " done"
+	    echo -n "Running DVO..."
+	    roslaunch dvo_benchmark benchmark.launch output_dir:=${RESULTS_DIR} dataset:=${PWD} associations_file:=associations.txt groundtruth_file:=groundtruth.txt odometry_file:=dvo_odometry_${DATASET_NAME}.txt camera_matrix_file:=camera.txt scale:=1000 > ${LOGS_DIR}/dvo_log_${DATASET_NAME}.txt
+	    echo " done"
 	    echo -n "Running NDT..."
 	    rosrun ndt_evaluate ndt_eth_kinect_evaluate_node ${CONF_DIR}/ndt_eth_kinect.conf ${f}/associations.txt ${RESULTS_DIR}/ndt_odometry_${DATASET_NAME}.txt > ${LOGS_DIR}/ndt_log_${DATASET_NAME}.txt
 	    echo " done"
-	    # echo -n "Running KINFU..."
-	    # optirun ${BIN_DIR}/kinfu_eth_kinect_evaluate ${CONF_DIR}/kinfu_eth_kinect.conf associations.txt ${RESULTS_DIR}/kinfu_odometry_${DATASET_NAME}.txt 0 > ${LOGS_DIR}/kinfu_log_${DATASET_NAME}.txt
-	    # echo " done"
+	    echo -n "Running KINFU..."
+	    optirun ${BIN_DIR}/kinfu_eth_kinect_evaluate ${CONF_DIR}/kinfu_eth_kinect.conf associations.txt ${RESULTS_DIR}/kinfu_odometry_${DATASET_NAME}.txt 0 > ${LOGS_DIR}/kinfu_log_${DATASET_NAME}.txt
+	    echo " done"
 	    echo -n "Running NICP..."
 	    ${BIN_DIR}/nicp_eth_kinect_evaluate ${CONF_DIR}/nicp_eth_kinect.conf associations.txt ${RESULTS_DIR}/nicp_odometry_${DATASET_NAME}.txt 0 > ${LOGS_DIR}/nicp_log_${DATASET_NAME}.txt
 	    echo " done"
@@ -86,9 +86,9 @@ do
 	#####################################################################
 	echo -n "Computing RPE..."
 	python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/gicp_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/gicp_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/gicp_rpe_${DATASET_NAME}.txt
-	# python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/dvo_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/dvo_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/dvo_rpe_${DATASET_NAME}.txt
+	python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/dvo_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/dvo_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/dvo_rpe_${DATASET_NAME}.txt
 	python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/ndt_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/ndt_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/ndt_rpe_${DATASET_NAME}.txt
-	# python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/kinfu_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/kinfu_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/kinfu_rpe_${DATASET_NAME}.txt
+	python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/kinfu_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/kinfu_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/kinfu_rpe_${DATASET_NAME}.txt
 	python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/nicp_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/nicp_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/nicp_rpe_${DATASET_NAME}.txt
 	python ${SCRIPT_DIR}/evaluate_rpe.py --fixed_delta --plot ${RESULTS_DIR}/nicp_incremental_rpe_${DATASET_NAME}.png --verbose groundtruth.txt ${RESULTS_DIR}/nicp_incremental_odometry_${DATASET_NAME}.txt > ${RESULTS_DIR}/nicp_incremental_rpe_${DATASET_NAME}.txt
 	echo " done"
@@ -98,9 +98,9 @@ do
 	#####################################################################
 	echo -n "Computing ATE..."
 	python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/gicp_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/gicp_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/gicp_ate_${DATASET_NAME}.txt
-	# python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/dvo_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/dvo_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/dvo_ate_${DATASET_NAME}.txt
+	python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/dvo_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/dvo_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/dvo_ate_${DATASET_NAME}.txt
 	python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/ndt_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/ndt_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/ndt_ate_${DATASET_NAME}.txt
-	# python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/kinfu_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/kinfu_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/kinfu_ate_${DATASET_NAME}.txt
+	python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/kinfu_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/kinfu_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/kinfu_ate_${DATASET_NAME}.txt
 	python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/nicp_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/nicp_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/nicp_ate_${DATASET_NAME}.txt
 	python ${SCRIPT_DIR}/evaluate_ate.py groundtruth.txt ${RESULTS_DIR}/nicp_incremental_odometry_${DATASET_NAME}.txt --plot ${RESULTS_DIR}/nicp_incremental_ate_${DATASET_NAME}.png --verbose > ${RESULTS_DIR}/nicp_incremental_ate_${DATASET_NAME}.txt
 	echo " done"

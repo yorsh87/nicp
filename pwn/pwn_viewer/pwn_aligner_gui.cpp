@@ -41,28 +41,28 @@ int main(int argc, char **argv) {
   mainWindow.projectorsUpdate();
 
   // ETH Kinect
-  // mainWindow.pinhole_projector_radioButton->setChecked(true);
-  // mainWindow.fx_doubleSpinBox->setValue(131.25); 
-  // mainWindow.fy_doubleSpinBox->setValue(131.25);
-  // mainWindow.cx_doubleSpinBox->setValue(79.875);
-  // mainWindow.cy_doubleSpinBox->setValue(59.875);
-  // mainWindow.rows_spinBox->setValue(120);
-  // mainWindow.cols_spinBox->setValue(160);
-  // mainWindow.min_distance_doubleSpinBox->setValue(0.01f);
-  // mainWindow.max_distance_doubleSpinBox->setValue(5.0f);
-  // mainWindow.min_image_radius_spinBox->setValue(5);
-  // mainWindow.max_image_radius_spinBox->setValue(10);
-  // mainWindow.min_points_spinBox->setValue(20);
-  // mainWindow.world_radius_doubleSpinBox->setValue(0.2f);
-  // mainWindow.curv_threshold_doubleSpinBox->setValue(0.3f);
-  // mainWindow.normal_angle_doubleSpinBox->setValue(0.8f);
-  // mainWindow.point_distance_doubleSpinBox->setValue(0.25f);
-  // mainWindow.max_chi2_doubleSpinBox->setValue(1.0f);
-  // mainWindow.curv_flatness_doubleSpinBox->setValue(0.3f);
-  // mainWindow.statsUpdate();
-  // mainWindow.correspondencesUpdate();
-  // mainWindow.alignerUpdate();
-  // mainWindow.projectorsUpdate();
+  mainWindow.pinhole_projector_radioButton->setChecked(true);
+  mainWindow.fx_doubleSpinBox->setValue(131.25); 
+  mainWindow.fy_doubleSpinBox->setValue(131.25);
+  mainWindow.cx_doubleSpinBox->setValue(79.875);
+  mainWindow.cy_doubleSpinBox->setValue(59.875);
+  mainWindow.rows_spinBox->setValue(120);
+  mainWindow.cols_spinBox->setValue(160);
+  mainWindow.min_distance_doubleSpinBox->setValue(0.01f);
+  mainWindow.max_distance_doubleSpinBox->setValue(5.0f);
+  mainWindow.min_image_radius_spinBox->setValue(5);
+  mainWindow.max_image_radius_spinBox->setValue(10);
+  mainWindow.min_points_spinBox->setValue(20);
+  mainWindow.world_radius_doubleSpinBox->setValue(0.2f);
+  mainWindow.curv_threshold_doubleSpinBox->setValue(0.3f);
+  mainWindow.normal_angle_doubleSpinBox->setValue(0.8f);
+  mainWindow.point_distance_doubleSpinBox->setValue(0.25f);
+  mainWindow.max_chi2_doubleSpinBox->setValue(1.0f);
+  mainWindow.curv_flatness_doubleSpinBox->setValue(0.3f);
+  mainWindow.statsUpdate();
+  mainWindow.correspondencesUpdate();
+  mainWindow.alignerUpdate();
+  mainWindow.projectorsUpdate();
 
   while(mainWindow.isVisible()) { qApplication.processEvents(); }
 

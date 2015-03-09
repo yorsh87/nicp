@@ -1,9 +1,9 @@
 # Find the header files
 
+MESSAGE("NICP_ROOT: $ENV{NICP_ROOT}")
 
-FIND_PATH(PWN_INCLUDE_DIR pwn/aligner.h
-  ${PROJECT_SOURCE_DIR}/../pwn
-  ${PROJECT_SOURCE_DIR}/../../pwn
+FIND_PATH(NICP_INCLUDE_DIR pwn/aligner.h
+  $ENV{NICP_ROOT}/pwn
   /usr/local/include
   /usr/include
   /opt/local/include
@@ -15,14 +15,12 @@ FIND_PATH(PWN_INCLUDE_DIR pwn/aligner.h
 # Macro to unify finding both the debug and release versions of the
 # libraries; this is adapted from the OpenSceneGraph FIND_LIBRARY
 # macro.
-MACRO(FIND_PWN_LIBRARY MYLIBRARY MYLIBRARYNAME)
+MACRO(FIND_NICP_LIBRARY MYLIBRARY MYLIBRARYNAME)
   FIND_LIBRARY("${MYLIBRARY}_DEBUG"
     NAMES "${MYLIBRARYNAME}_d"
     PATHS
-    ${PROJECT_SOURCE_DIR}/../pwn/lib/Debug
-    ${PROJECT_SOURCE_DIR}/../pwn/lib
-    ${PROJECT_SOURCE_DIR}/../../pwn/lib/Debug
-    ${PROJECT_SOURCE_DIR}/../../pwn/lib
+    $ENV{NICP_ROOT}/lib/Debug
+    $ENV{NICP_ROOT}/lib
     NO_DEFAULT_PATH
   )
 
@@ -43,10 +41,8 @@ MACRO(FIND_PWN_LIBRARY MYLIBRARY MYLIBRARYNAME)
   FIND_LIBRARY(${MYLIBRARY}
     NAMES "${MYLIBRARYNAME}"
     PATHS
-    ${PROJECT_SOURCE_DIR}/../pwn/lib/Release
-    ${PROJECT_SOURCE_DIR}/../pwn/lib
-    ${PROJECT_SOURCE_DIR}/../../pwn/lib/Release
-    ${PROJECT_SOURCE_DIR}/../../pwn/lib
+    $ENV{NICP_ROOT}/lib/Release
+    $ENV{NICP_ROOT}/lib
     NO_DEFAULT_PATH
   )
 
@@ -69,9 +65,8 @@ MACRO(FIND_PWN_LIBRARY MYLIBRARY MYLIBRARYNAME)
       SET(${MYLIBRARY}_DEBUG ${MYLIBRARY})
     ENDIF(MYLIBRARY)
   ENDIF(NOT ${MYLIBRARY}_DEBUG)
-ENDMACRO(FIND_PWN_LIBRARY LIBRARY LIBRARYNAME)
+ENDMACRO(FIND_NICP_LIBRARY LIBRARY LIBRARYNAME)
 
 # Find the core elements
-FIND_PWN_LIBRARY(PWN_LIBRARY pwn)
-FIND_PWN_LIBRARY(PWN_BOSS_LIBRARY pwn_boss)
-FIND_PWN_LIBRARY(PWN_BOSS_LIBRARY pwn_viewer)
+FIND_NICP_LIBRARY(NICP_LIBRARY pwn)
+FIND_NICP_LIBRARY(NICP_VIEWER_LIBRARY pwn_viewer)
