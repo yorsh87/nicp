@@ -13,10 +13,12 @@ namespace pwn {
     _flatCurvatureThreshold = 0.02f;
     _inlierCurvatureRatioThreshold = 1.3f;
     _numCorrespondences = 0;
+    _correspondences.clear();
     _rows = 0;
     _cols = 0;
     _rowSearchRegion = 0;
     _colSearchRegion = 0;
+    _demotedToGICP = false;
   }
 
   void CorrespondenceFinder::compute(const Cloud &referenceScene, const Cloud &currentScene, Eigen::Isometry3f T){
@@ -31,7 +33,7 @@ namespace pwn {
     assert(_currentIndexImage.rows > 0 && _currentIndexImage.cols > 0 && "CorrespondenceFinder: _currentIndexImage has zero size");
     assert(_referenceDepthImage.rows > 0 && _referenceDepthImage.cols > 0 && "CorrespondenceFinder: _referenceDepthImage has zero size");
     assert(_currentDepthImage.rows > 0 && _currentDepthImage.cols > 0 && "CorrespondenceFinder: _currentDepthImage has zero size");
-    
+
     T.matrix().block<1, 4>(3, 0) << 0.0f, 0.0f, 0.0f, 1.0f;
     _numCorrespondences = 0;
     if((int)_correspondences.size() != _referenceIndexImage.rows * _referenceIndexImage.cols)
@@ -75,7 +77,7 @@ namespace pwn {
 	  const Point &currentPoint = currentScene.points()[currentIndex];
 	  const Point &_referencePoint = referenceScene.points()[referenceIndex];
 
-	  if(currentNormal.squaredNorm() == 0.0f || _referenceNormal.squaredNorm() == 0.0f) {
+	  if(!_demotedToGICP && (currentNormal.squaredNorm() == 0.0f || _referenceNormal.squaredNorm() == 0.0f)) {
 	    continue;
 	  }
 
@@ -83,28 +85,31 @@ namespace pwn {
 	  Point referencePoint = T * _referencePoint;
 	  Normal referenceNormal = T * _referenceNormal;
 	
-	  // This condition captures the angluar offset, and is moved to the end of the loop
-	  if(currentNormal.dot(referenceNormal) < _inlierNormalAngularThreshold) {
-	    continue;
-	  }
-
 	  Eigen::Vector4f pointsDistance = currentPoint - referencePoint;
 	  // The condition below has moved to the increment, fill the pipeline, baby
 	  if(pointsDistance.squaredNorm() > _squaredThreshold) {
 	    continue;     	
           }
-	  float referenceCurvature = referenceScene.stats()[referenceIndex].curvature();
-	  float currentCurvature = currentScene.stats()[currentIndex].curvature();
-	  if(referenceCurvature < _flatCurvatureThreshold)
-	    referenceCurvature = _flatCurvatureThreshold;
+	
+	  if(!_demotedToGICP) {
+	    // This condition captures the angluar offset, and is moved to the end of the loop
+	    if(currentNormal.dot(referenceNormal) < _inlierNormalAngularThreshold) {
+	      continue;
+	    }
 
-	  if(currentCurvature < _flatCurvatureThreshold)
-	    currentCurvature = _flatCurvatureThreshold;
+	    float referenceCurvature = referenceScene.stats()[referenceIndex].curvature();
+	    float currentCurvature = currentScene.stats()[currentIndex].curvature();
+	    if(referenceCurvature < _flatCurvatureThreshold)
+	      referenceCurvature = _flatCurvatureThreshold;
 
-	  // The condition below has moved to the increment, fill the pipeline, baby
-	  float curvatureRatio = (referenceCurvature + 1e-5) / (currentCurvature + 1e-5);
-	  if(curvatureRatio < minCurvatureRatio || curvatureRatio > maxCurvatureRatio) {
-	    continue;
+	    if(currentCurvature < _flatCurvatureThreshold)
+	      currentCurvature = _flatCurvatureThreshold;
+
+	    // The condition below has moved to the increment, fill the pipeline, baby
+	    float curvatureRatio = (referenceCurvature + 1e-5) / (currentCurvature + 1e-5);
+	    if(curvatureRatio < minCurvatureRatio || curvatureRatio > maxCurvatureRatio) {
+	      continue;
+	    }
 	  }
 
 	  _correspondences[correspondenceIndex].referenceIndex = referenceIndex;

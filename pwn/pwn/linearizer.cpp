@@ -12,11 +12,14 @@ namespace pwn {
     _b.setZero();
     _inlierMaxChi2 = 9e3;
     _robustKernel = true;
+    _demotedToGeneralizedICP = false;
+    _zScaling = true;
+    _scale = 1.0f;
   }
 
   void Linearizer::update() {
     assert(_aligner && "Aligner: missing _aligner");
-    
+
     // Variables initialization.
     _b = Vector6f::Zero();
     _H = Matrix6f::Zero();
@@ -58,8 +61,14 @@ namespace pwn {
 	const Normal referenceNormal = _T * _aligner->referenceCloud()->normals()[correspondence.referenceIndex];
 	const Point &currentPoint = _aligner->currentCloud()->points()[correspondence.currentIndex];
 	const Normal &currentNormal = _aligner->currentCloud()->normals()[correspondence.currentIndex];
-	const InformationMatrix &omegaP = pointOmegas[correspondence.currentIndex];
-	const InformationMatrix &omegaN = normalOmegas[correspondence.currentIndex];
+	InformationMatrix omegaP = pointOmegas[correspondence.currentIndex];	
+	InformationMatrix omegaN = _scale * normalOmegas[correspondence.currentIndex];
+	if(_zScaling) {
+	  omegaP *= 1.0f / fabs(currentPoint.z());
+	  omegaN *= 1.0f / fabs(currentPoint.z());
+	}
+	
+	if(_demotedToGeneralizedICP) { omegaN.setZero(); }
       
 	const Vector4f pointError = referencePoint - currentPoint;
 	const Vector4f normalError = referenceNormal - currentNormal;

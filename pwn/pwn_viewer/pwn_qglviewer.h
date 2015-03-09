@@ -1,10 +1,12 @@
 #pragma once
 
-#include <QGLViewer/qglviewer.h>
-#include <vector>
-#include "drawable.h"
-
 #include <iostream>
+#include <vector>
+
+#include <QGLViewer/qglviewer.h>
+#include <qevent.h>
+
+#include "drawable.h"
 
 using namespace std;
 
@@ -19,6 +21,10 @@ namespace pwn_viewer {
 
     virtual void init();
     virtual void draw();
+
+    virtual void keyPressEvent(QKeyEvent *e);
+    QKeyEvent* lastKeyEvent();
+    void keyEventProcessed();
 
     virtual void addDrawable(Drawable *d);
     inline void popFront() { _drawableList.erase(_drawableList.begin()); }
@@ -36,6 +42,9 @@ namespace pwn_viewer {
     inline const std::vector<Drawable*>& drawableList() const { return _drawableList; }   
 
   protected:
+    QKeyEvent _last_key_event;
+    bool _last_key_event_processed;
+
     int _numDrawLists;
     GLuint _ellipsoidDrawList;
     GLuint _pyramidDrawList;

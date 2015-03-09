@@ -34,7 +34,9 @@ namespace pwn_viewer {
     bool _standard;
   };
 
-  PWNQGLViewer::PWNQGLViewer(QWidget *parent, const QGLWidget *shareWidget, Qt::WFlags flags) : QGLViewer(parent, shareWidget, flags) {
+  PWNQGLViewer::PWNQGLViewer(QWidget *parent, const QGLWidget *shareWidget, Qt::WFlags flags) : QGLViewer(parent, shareWidget, flags), _last_key_event(QEvent::None, 0, Qt::NoModifier) {
+    _last_key_event_processed = true;
+    
     _ellipsoidDrawList = 0;
     _numDrawLists = 2;
   }
@@ -133,4 +135,17 @@ namespace pwn_viewer {
     _drawableList.push_back(d);
   }
 
+  QKeyEvent* PWNQGLViewer::lastKeyEvent() {
+    if(_last_key_event_processed) { return 0; }
+    return &_last_key_event;
+  }
+  
+  void PWNQGLViewer::keyEventProcessed() { _last_key_event_processed = true; }
+
+  void PWNQGLViewer::keyPressEvent(QKeyEvent* e) {
+    QGLViewer::keyPressEvent(e);
+    _last_key_event = *e;
+    _last_key_event_processed = false;
+  }
+  
 }

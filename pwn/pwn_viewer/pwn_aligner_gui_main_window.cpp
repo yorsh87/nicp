@@ -30,7 +30,7 @@ namespace pwn_viewer {
     std::set<std::string> filenames = _readDirectory(directory);
     for(std::set<std::string>::const_iterator it = filenames.begin(); it != filenames.end(); ++it) {
       QString listItem(&(*it)[0]);
-      if(listItem.endsWith(".pgm", Qt::CaseInsensitive)) {
+      if(listItem.endsWith(".pgm", Qt::CaseInsensitive) || listItem.endsWith(".png", Qt::CaseInsensitive)) {
 	cloud_selection_listWidget->addItem(listItem); 
       }
     } 
@@ -118,7 +118,7 @@ namespace pwn_viewer {
   }
 
   void PwnAlignerGuiMainWindow::correspondencesUpdate() { 
-    _correspondenceFinder->setInlierNormalAngularThreshold(cosf(normal_angle_doubleSpinBox->value()));
+    _correspondenceFinder->setInlierNormalAngularThreshold(normal_angle_doubleSpinBox->value());
     _correspondenceFinder->setFlatCurvatureThreshold(curv_flatness_doubleSpinBox->value());
     _correspondenceFinder->setInlierCurvatureRatioThreshold(curv_ratio_doubleSpinBox->value());
     _correspondenceFinder->setInlierDistanceThreshold(point_distance_doubleSpinBox->value());
@@ -279,6 +279,15 @@ namespace pwn_viewer {
   }
 
   void PwnAlignerGuiMainWindow::optimize() { 
+    std::cerr << "sc: " << _statsCalculatorIntegralImage->minImageRadius() << " " << _statsCalculatorIntegralImage->maxImageRadius() << " " 
+	      << _statsCalculatorIntegralImage->minPoints() << " " << _statsCalculatorIntegralImage->worldRadius() << " "
+	      << _statsCalculatorIntegralImage->curvatureThreshold() << std::endl;
+    std::cerr << "im: " << _pointInformationMatrixCalculator->curvatureThreshold() << " " << _normalInformationMatrixCalculator->curvatureThreshold() << std::endl;
+    std::cerr << "cf: " << _correspondenceFinder->imageRows() << " " << _correspondenceFinder->imageCols() << " " 
+	      << _correspondenceFinder->inlierDistanceThreshold() << " " << _correspondenceFinder->inlierNormalAngularThreshold() << " "
+	      << _correspondenceFinder->inlierCurvatureRatioThreshold() << " " << _correspondenceFinder->flatCurvatureThreshold() << std::endl;
+    std::cerr << "al: " << _aligner->innerIterations() << " " << _aligner->outerIterations() << " " 
+	      << _aligner->minInliers() << " " << _linearizer->inlierMaxChi2() << std::endl;
     if(viewer->drawableList().size() < 2) { return; }
 
     _selectProjector();

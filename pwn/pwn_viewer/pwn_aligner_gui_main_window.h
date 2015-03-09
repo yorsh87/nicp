@@ -26,7 +26,7 @@ namespace pwn_viewer {
     const Eigen::Isometry3f& sensorOffset() { return _sensorOffset; }
 
     public slots:
-      virtual void visualizationUpdate();
+    virtual void visualizationUpdate();
     virtual void statsUpdate();
     virtual void correspondencesUpdate();
     virtual void alignerUpdate();
