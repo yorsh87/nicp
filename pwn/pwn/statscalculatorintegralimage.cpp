@@ -25,7 +25,6 @@ namespace pwn {
     assert(points.size() > 0 && "StatsCalculatorIntegralImage: points has zero size");
     assert(indexImage.rows > 0 && indexImage.cols > 0 && "StatsCalculatorIntegralImage: indexImage has zero size");    
     assert(_intervalImage.rows > 0 && _intervalImage.cols > 0 && "StatsCalculatorIntegralImage: _intervalImage has zero size");
-
     if(statsVector.size() != points.size())
       statsVector.resize(points.size());
     if(normals.size() != points.size())
@@ -33,7 +32,6 @@ namespace pwn {
     Normal dummyNormal = Normal::Zero();
     std::fill(normals.begin(), normals.end(), dummyNormal);
     std::fill(statsVector.begin(), statsVector.end(), Stats());
-    
     // Computing the integral image
     _integralImage.compute(indexImage, points);    
 

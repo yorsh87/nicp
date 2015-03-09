@@ -28,7 +28,7 @@ System Requirements
 - Qt4 
 - QGLViewer 
 
-Building
+Building on Linux
 ----
 
 - mkdir build
@@ -40,7 +40,7 @@ Branches
 ----
 
 - master: current development version
-- fr1_eth_evaluation: branch with evaluation binaries for Munich Sturm datasets and ETH Pomerleau datasets
+
 
 Examples
 ----

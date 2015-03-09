@@ -22,18 +22,43 @@ int main(int argc, char **argv) {
   mainWindow.showMaximized();
   mainWindow.show();
 
+  // ETH Laser
   mainWindow.spherical_projector_radioButton->setChecked(true);
-  mainWindow.rows_spinBox->setValue(800);
+  mainWindow.rows_spinBox->setValue(1000);
   mainWindow.cols_spinBox->setValue(1500);
-  mainWindow.min_distance_doubleSpinBox->setValue(1.25f);
-  mainWindow.max_distance_doubleSpinBox->setValue(10.0f);
-  mainWindow.min_image_radius_spinBox->setValue(50);
+  mainWindow.min_distance_doubleSpinBox->setValue(0.5f);
+  mainWindow.max_distance_doubleSpinBox->setValue(30.0f);
+  mainWindow.min_image_radius_spinBox->setValue(10);
   mainWindow.max_image_radius_spinBox->setValue(100);
-  mainWindow.min_points_spinBox->setValue(100);
+  mainWindow.min_points_spinBox->setValue(30);
   mainWindow.world_radius_doubleSpinBox->setValue(0.25f);
-  mainWindow.curv_threshold_doubleSpinBox->setValue(0.2f);
-  // mainWindow.normal_angle_doubleSpinBox->setValue(0.5f);
-  // mainWindow.point_distance_doubleSpinBox->setValue(1.5f);
+  mainWindow.curv_threshold_doubleSpinBox->setValue(0.1f);
+  mainWindow.normal_angle_doubleSpinBox->setValue(0.78f);
+  mainWindow.point_distance_doubleSpinBox->setValue(1.5f);
+  mainWindow.statsUpdate();
+  mainWindow.correspondencesUpdate();
+  mainWindow.alignerUpdate();
+  mainWindow.projectorsUpdate();
+
+  // ETH Kinect
+  mainWindow.pinhole_projector_radioButton->setChecked(true);
+  mainWindow.fx_doubleSpinBox->setValue(131.25); 
+  mainWindow.fy_doubleSpinBox->setValue(131.25);
+  mainWindow.cx_doubleSpinBox->setValue(79.875);
+  mainWindow.cy_doubleSpinBox->setValue(59.875);
+  mainWindow.rows_spinBox->setValue(120);
+  mainWindow.cols_spinBox->setValue(160);
+  mainWindow.min_distance_doubleSpinBox->setValue(0.01f);
+  mainWindow.max_distance_doubleSpinBox->setValue(5.0f);
+  mainWindow.min_image_radius_spinBox->setValue(5);
+  mainWindow.max_image_radius_spinBox->setValue(10);
+  mainWindow.min_points_spinBox->setValue(20);
+  mainWindow.world_radius_doubleSpinBox->setValue(0.2f);
+  mainWindow.curv_threshold_doubleSpinBox->setValue(0.3f);
+  mainWindow.normal_angle_doubleSpinBox->setValue(0.8f);
+  mainWindow.point_distance_doubleSpinBox->setValue(0.25f);
+  mainWindow.max_chi2_doubleSpinBox->setValue(1.0f);
+  mainWindow.curv_flatness_doubleSpinBox->setValue(0.3f);
   mainWindow.statsUpdate();
   mainWindow.correspondencesUpdate();
   mainWindow.alignerUpdate();

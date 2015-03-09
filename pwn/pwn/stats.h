@@ -111,7 +111,7 @@ namespace pwn {
       _curvature = curvature_;
       _curvatureComputed = true;
     }
-  
+     
   protected:  	
     int _n; /**< Number of points use dto compute the normal. */
     Eigen::Vector3f _eigenValues;  /**< Eigenvalues associated to the covariance of the point. */

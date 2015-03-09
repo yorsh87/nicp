@@ -75,6 +75,7 @@ int main(int argc, char** argv) {
   listWidget->show();
   viewer->setAxisIsDrawn(true);
   mainWindow->showMaximized();
+  viewer->setBackgroundColor(QColor(255, 255, 255));
 
   set<string> filenamesSet = readDirectory(workingDirectory);
   for(set<string>::const_iterator it = filenamesSet.begin(); it != filenamesSet.end(); ++it) {

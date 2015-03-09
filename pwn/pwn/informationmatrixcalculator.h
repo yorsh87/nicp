@@ -25,6 +25,7 @@ namespace pwn {
       _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 1.0f, 1.0f));
       _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 1.0f, 1.0f));
       _curvatureThreshold = 0.0f;
+      _scale = 1.0f;
     }
 
     /**
@@ -83,11 +84,19 @@ namespace pwn {
     virtual void compute(InformationMatrixVector &informationMatrix,
 			 const StatsVector &stats,
 			 const NormalVector &imageNormals) = 0;
+
+    inline float scale() const { return _scale; }
+    inline void setScale(float scale_) { 
+      _scale = scale_; 
+      std::cerr << "Scalei: " << _scale << std::endl;
+    }
+
   
   protected:
     float _curvatureThreshold; /**< Threshold valued for which points are considered lying on a flat surface or not. */
     InformationMatrix _flatInformationMatrix; /**< Base information matrix for point lying on a flat surface. */
     InformationMatrix _nonFlatInformationMatrix; /**< Base information matrix for point lying on an high curvature surface. */
+    float _scale;
   };
 
   /** \class PointInformationMatrixCalculator informationmatrixcalculator.h "informationmatrixcalculator.h"
@@ -105,7 +114,7 @@ namespace pwn {
      */
     PointInformationMatrixCalculator() : InformationMatrixCalculator() {
       _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
-      _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 1.0f, 1.0f));
+      _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 0.1f, 0.1f));
       _curvatureThreshold = 0.02f;
     }
 
@@ -139,8 +148,9 @@ namespace pwn {
      *  This constructor creates a NormalInformationMatrixCalculator with default values for all its attributes.
      */
     NormalInformationMatrixCalculator() : InformationMatrixCalculator() {
-      _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 1000.0f, 0.001f));
-      _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 1.0f, 1.0f));
+       _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
+       // _flatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(100000.0f, 0.00001f, 100000.0f));
+      _nonFlatInformationMatrix.diagonal() = Normal(Eigen::Vector3f(0.1f, 1.0f, 1.0f));
       _curvatureThreshold = 0.02f;
     }
 

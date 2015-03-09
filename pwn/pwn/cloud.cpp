@@ -24,7 +24,7 @@ namespace pwn {
     return save(os, T, step, binary);  
   }
 
-  void Cloud::resize(size_t s) {
+  void Cloud::resize(size_t s, bool hasRGB) {
     if (s) {
       _points.resize(s);
       _normals.resize(s);
@@ -32,14 +32,12 @@ namespace pwn {
       _normalInformationMatrix.resize(s);
       _pointInformationMatrix.resize(s);
       _gaussians.resize(s);
-      _rgbs.resize(s);
+      if(hasRGB) { _rgbs.resize(s); }
     } else
       clear();
   }
   
-  size_t Cloud::size() {
-    return _points.size();
-  }
+  size_t Cloud::size() { return _points.size(); }
 
   bool Cloud::load(Eigen::Isometry3f &T, istream &is) {
     _points.clear();
@@ -162,7 +160,7 @@ namespace pwn {
     _rgbs.clear();
   }
 
-  void Cloud::add(Cloud cloud, const Eigen::Isometry3f &T) {
+  void Cloud::add(Cloud& cloud, const Eigen::Isometry3f &T) {
     cloud.transformInPlace(T);
     size_t k = _points.size(); 
     _points.resize(k + cloud.points().size());
@@ -173,25 +171,20 @@ namespace pwn {
     _gaussians.resize(k + cloud.gaussians().size());
     if (_rgbs.size() + cloud.rgbs().size())
       _rgbs.resize(k + cloud.rgbs().size());
-    // if (_traversabilityVector.size() && cloud.traversabilityVector().size())
-    //   _traversabilityVector.resize(k + cloud.traversabilityVector().size());
     for(int i = 0; k < _points.size(); k++, i++) {
       _points[k] = cloud.points()[i];
       _normals[k] = cloud.normals()[i];
       _stats[k] = cloud.stats()[i];
-      if(cloud.pointInformationMatrix().size() != 0) {
+      // if(cloud.pointInformationMatrix().size() != 0) {
 	_pointInformationMatrix[k] = cloud.pointInformationMatrix()[i];
 	_normalInformationMatrix[k] = cloud.normalInformationMatrix()[i];
-      }
-      if(cloud.gaussians().size() != 0) {
+	// }
+	// if(cloud.gaussians().size() != 0) {
 	_gaussians[k] = cloud.gaussians()[i];
-      }
+	// }
       if(cloud.rgbs().size() != 0) {
       	_rgbs[k] = cloud.rgbs()[i];
       }
-      // if(cloud.traversabilityVector().size() != 0) {
-      // 	_traversabilityVector[k] = cloud.traversabilityVector()[i];
-      // }
     }
   }
 
@@ -248,5 +241,138 @@ namespace pwn {
       }
   }
 
+  struct IndexTriplet {
+    int x, y, z, index;
 
+    IndexTriplet() {
+      x = y = z = 0;
+      index = -1;
+    }
+
+    IndexTriplet(const Eigen::Vector4f& v, int idx, float ires) {
+      x = (int)(ires*v.x());
+      y = (int)(ires*v.y());
+      z = (int)(ires*v.z());
+      index = idx;
+    }
+
+    bool operator < (const IndexTriplet& o) const {
+      if(z < o.z) { return true; }
+      if(z > o.z) { return false; }
+      if(x < o.x) { return true; }
+      if(x > o.x) { return false; }
+      if(y < o.y) { return true; }
+      if(y > o.y) { return false; }
+      if(index < o.index) { return true; }
+      return false;
+    }
+
+    bool sameCell(const IndexTriplet& o) const {
+      return x == o.x && y == o.y && z == o.z;
+    }
+  };
+
+  struct StatsAccumulator {
+    StatsAccumulator() {
+      acc = 0;
+      u = Eigen::Vector3f::Zero();
+      omega = Eigen::Matrix3f::Zero();
+    }
+
+    int acc;
+    Eigen::Vector3f u;    
+    Eigen::Matrix3f omega;
+  };
+
+  void voxelize(Cloud* model, float res) {
+    float ires = 1.0f / res;
+    std::vector<IndexTriplet> voxels(model->size());
+    for(int i = 0; i < (int)model->size(); i++) { voxels[i] = IndexTriplet(model->points()[i], i , ires); }
+    Cloud sparseModel;
+    sparseModel.resize(model->size());
+    std::sort(voxels.begin(), voxels.end());
+    int k = -1;
+    std::vector<StatsAccumulator> statsAccs;
+    statsAccs.resize(model->size());
+    std::fill(statsAccs.begin(), statsAccs.begin(), StatsAccumulator());
+    for(size_t i = 0; i < voxels.size(); i++) { 
+      IndexTriplet& triplet = voxels[i];
+      int idx = triplet.index;
+      StatsAccumulator& statsAcc = statsAccs[i];
+      if(k >= 0 && voxels[i].sameCell(voxels[i-1])) { 	
+	Eigen::Matrix3f U = model->stats()[idx].eigenVectors();
+	Eigen::Vector3f lambdas = model->stats()[idx].eigenValues();
+	Eigen::Matrix3f sigma = U * Diagonal3f(lambdas.x(), lambdas.y(), lambdas.z()) * U.inverse(); 
+	Eigen::Matrix3f omega = sigma.inverse();
+	statsAcc.omega += omega;
+	statsAcc.u += omega * model->stats()[idx].mean().head<3>();
+	statsAcc.acc++;
+      } 
+      else {
+	k++;
+	Eigen::Matrix3f U = model->stats()[idx].eigenVectors();
+	Eigen::Vector3f lambdas = model->stats()[idx].eigenValues();
+	Eigen::Matrix3f sigma = U * Diagonal3f(lambdas.x(), lambdas.y(), lambdas.z()) * U.inverse(); 
+	Eigen::Matrix3f omega = sigma.inverse();
+	statsAcc.omega += omega;
+	statsAcc.u += omega * model->stats()[idx].mean().head<3>();
+	statsAcc.acc++;
+	sparseModel.points()[k] = model->points()[idx];
+	sparseModel.normals()[k] = model->normals()[idx];
+	sparseModel.stats()[k] = model->stats()[idx];
+	sparseModel.pointInformationMatrix()[k] = model->pointInformationMatrix()[idx];
+	sparseModel.normalInformationMatrix()[k] = model->normalInformationMatrix()[idx];
+	sparseModel.gaussians()[k] = model->gaussians()[idx];
+      } 
+    }
+    sparseModel.resize(k); 
+    statsAccs.resize(k);
+    *model = sparseModel;
+    
+    InformationMatrix _flatPointInformationMatrix = InformationMatrix::Zero();
+    InformationMatrix _nonFlatPointInformationMatrix = InformationMatrix::Zero();
+    InformationMatrix _flatNormalInformationMatrix = InformationMatrix::Zero();
+    InformationMatrix _nonFlatNormalInformationMatrix = InformationMatrix::Zero();
+    _flatPointInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
+    _nonFlatPointInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1.0f, 0.1f, 0.1f));
+    _flatNormalInformationMatrix.diagonal() = Normal(Eigen::Vector3f(1000.0f, 0.001f, 0.001f));
+    _nonFlatNormalInformationMatrix.diagonal() = Normal(Eigen::Vector3f(0.1f, 1.0f, 1.0f));
+    for(size_t i = 0; i < model->size(); i++) { 
+      StatsAccumulator& statsAcc = statsAccs[i];
+      if(statsAcc.acc > 1) {
+	statsAcc.u = statsAcc.omega * statsAcc.u;      
+	Point& p = model->points()[i];
+	p = statsAcc.u;      
+            
+	Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigenSolver;
+	eigenSolver.computeDirect(statsAcc.omega.inverse(), Eigen::ComputeEigenvectors);
+	Stats& stats = model->stats()[i]; 
+	stats.setZero();
+	stats.setEigenVectors(eigenSolver.eigenvectors());
+	stats.setMean(statsAcc.u);
+	InformationMatrix U = Eigen::Matrix4f::Zero();
+	U.block<3, 3>(0, 0)  = eigenSolver.eigenvectors();
+	Eigen::Vector3f eigenValues = eigenSolver.eigenvalues();
+	if(eigenValues(0) < 0.0f) { eigenValues(0) = 0.0f; }	  
+	stats.setEigenValues(eigenValues);
+	stats.setN(statsAcc.acc);
+
+	Normal& n = model->normals()[i];
+	n = stats.block<4, 1>(0, 0);
+	if(stats.curvature() < 0.3f) {
+	  if(n.dot(p) > 0) { n = -n; }
+	} 
+	else { n.setZero(); }      
+
+	if(stats.curvature() < 0.1f) {
+	  model->pointInformationMatrix()[i] = U * _flatPointInformationMatrix * U.transpose();
+	  model->normalInformationMatrix()[i] = U * _flatNormalInformationMatrix * U.transpose();
+	}
+	else {
+	  model->pointInformationMatrix()[i] = U * _nonFlatPointInformationMatrix * U.transpose();
+	  model->normalInformationMatrix()[i] = U * _nonFlatNormalInformationMatrix * U.transpose();
+	}
+      }
+    }
+  }
 }

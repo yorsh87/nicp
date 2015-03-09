@@ -18,32 +18,24 @@ namespace pwn {
     assert(_depthImageConverter->projector()  && "Merger: missing projector in _depthImageConverter");  
 
     PointProjector *pointProjector = _depthImageConverter->projector();
+    Eigen::Isometry3f oldTransform = pointProjector->transform();
+    
     pointProjector->setTransform(transform);
     pointProjector->project(_indexImage, 
 			    _depthImage, 
 			    cloud->points());
-      
-    // Scan all the points, 
-    // if they fall in a cell not with -1, 
-    //   skip
-    // if they fall in a cell with n>1, 
-    //   if distance is incompatible,
-    //      skip
-    // if normals are incompatible
-    //      skip
-    // accumulate the point in the cell i
-    // set the target accumulator to i;
+
     int target = 0;
     int distance = 0;
     _collapsedIndices.resize(cloud->points().size());
     std::fill(_collapsedIndices.begin(), _collapsedIndices.end(), -1);
-    
+
     int killed = 0;
     int currentIndex = 0;
     for(size_t i = 0; i < cloud->points().size(); currentIndex++ ,i++) {
       const Point currentPoint = cloud->points()[i];
       const Normal currentNormal = cloud->normals()[i];
-    
+
       int r = -1, c = -1;
       float depth = 0.0f;
       pointProjector->project(c, r, depth, currentPoint);
@@ -67,9 +59,9 @@ namespace pwn {
       if(targetIndex == currentIndex) {
 	_collapsedIndices[currentIndex] = currentIndex;
       } 
-      else if(fabs(depth - targetZ) < _distanceThreshold && 
+      else if(fabs(depth - targetZ) < _distanceThreshold /*&& 
 	      currentNormal.dot(targetNormal) > _normalThreshold &&
-	      (viewPointDirection.dot(targetNormal)>cos(0)) ) {
+	      (viewPointDirection.dot(targetNormal)>cos(0))*/ ) {
 	Gaussian3f &targetGaussian = cloud->gaussians()[targetIndex];
 	Gaussian3f &currentGaussian = cloud->gaussians()[currentIndex];
 	targetGaussian.addInformation(currentGaussian);
@@ -78,14 +70,6 @@ namespace pwn {
       }
     }
 
-    // Scan the vector of covariances.
-    // if the index is -1
-    //    copy into k
-    //    increment k 
-    // if the index is the same,
-    //    update the point with normal
-    //    copy into k
-    //    increment k
     int murdered = 0;
     int k = 0;  
     for(size_t i = 0; i < _collapsedIndices.size(); i++) {
@@ -118,12 +102,10 @@ namespace pwn {
     cloud->normalInformationMatrix().resize(k);
     if(cloud->rgbs().size())
       cloud->rgbs().resize(k);
-    std::cerr << "Number of suppressed points: " << murdered  << std::endl;
-    std::cerr << "Resized cloud from: " << originalSize << " to " << k << " points" <<std::endl;
+    std::cout << "[INFO]: number of suppressed points " << murdered << std::endl;
+    std::cout << "[INFO]: resized cloud from " << originalSize << " to " << k << " points" <<std::endl;
     
-    // Recompute the normals
-    // pointProjector->project(_indexImage, _depthImage, cloud->points());
-    // _depthImageConverter->compute(*cloud, _depthImage, transform);
+    pointProjector->setTransform(oldTransform);
   }
 
 }

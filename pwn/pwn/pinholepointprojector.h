@@ -273,7 +273,7 @@ namespace pwn {
      *  @see unProject() 
      */
     inline bool _unProject(Point &p, const int x, const int y, const float d) const {
-      if(d < _minDistance || d > _maxDistance)
+      if(d == 0.0f || d < _minDistance || d > _maxDistance)
 	return false;
       p = _iKRt * Eigen::Vector4f(x * d,y * d, d, 1.0f);
       return true;
