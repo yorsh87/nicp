@@ -1,6 +1,6 @@
 # Find the header files
 
-MESSAGE("NICP_ROOT: $ENV{NICP_ROOT}")
+MESSAGE(STATUS "NICP_ROOT: " $ENV{NICP_ROOT})
 
 FIND_PATH(NICP_INCLUDE_DIR pwn/aligner.h
   $ENV{NICP_ROOT}/pwn

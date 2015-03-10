@@ -48,7 +48,7 @@ MESSAGE(STATUS "Compiling on Unix")
 
 SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -msse4.2") 
 SET(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O3 -msse4.2") 
-SET(pwn_C_FLAGS "${pwn__C_FLAGS} -Wall -W")
+SET(pwn_C_FLAGS "${pwn_C_FLAGS} -Wall -W")
 SET(pwn_CXX_FLAGS "${pwn_CXX_FLAGS} -Wall -W")
 
 # Specifying compiler flags

@@ -222,7 +222,7 @@ public:
       glPopMatrix();
     }    
     
-    if(_algorithm != "") {
+    if(_algorithm != "" && (_spinOnce || _spin)) {
       char buffer[1024];
       sprintf(buffer, "%s_%05d.png", _algorithm.c_str(), _seq);
       this->setSnapshotFormat(QString("PNG"));
@@ -252,7 +252,7 @@ public:
   void updateCurrentCloud(Cloud* currentCloud_, Eigen::Isometry3f transform_) {
     if(!_drawableCurrentCloud) {
       _drawableCurrentCloud = new DrawablePoints(transform_, 
-						 new GLParameterPoints(2.0f, Eigen::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)), 
+						 new GLParameterPoints(3.0f, Eigen::Vector4f(0.0f, 0.0f, 1.0f, 1.0f)), 
 						 &currentCloud_->points(), &currentCloud_->normals());      
       addDrawable(_drawableCurrentCloud);
     }
@@ -278,6 +278,7 @@ public:
     GLParameterPoints* pp = dynamic_cast<GLParameterPoints*>(_drawableReferenceScene->parameter());    
     if(dp && pp) {
       pp->setColor(Eigen::Vector4f(0.8f, 0.5f, 0.5f, 1.0f));
+      pp->setColor(Eigen::Vector4f(1.0f, 0.5f, 0.0f, 1.0f));
       dp->updatePointDrawList(); 
     }
     _drawableReferenceScene = 0;
@@ -456,7 +457,7 @@ public:
     // Merge
     Eigen::Isometry3f deltaT = _previousEstimateT.inverse() * estimateT;
     std::cout << "[INFO]: delta  T " << t2v(deltaT).transpose() << std::endl;    
-    if(_seq < 100 || _seq > 400) {
+    if(1 || _seq < 100 || _seq > 400) {
     _referenceScene->add(*_currentCloud, deltaT);
     }
     _referenceScene->transformInPlace(deltaT.inverse());
@@ -468,7 +469,7 @@ public:
     // Update visualization structures
     if(_seq > 1) { _viewer->updateCurrentCloud(_currentCloud, _offsetT.inverse() * estimateT); }
     else { return; }
-    if(_seq < 100 || _seq > 400) {
+    if(1 || _seq < 100 || _seq > 400) {
       _viewer->updateReferenceScene(_referenceScene, _offsetT.inverse() * estimateT);
       _viewer->resetReferenceScene(); 
     }

@@ -75,7 +75,7 @@ int main(int argc, char** argv) {
   listWidget->show();
   viewer->setAxisIsDrawn(true);
   mainWindow->showMaximized();
-  viewer->setBackgroundColor(QColor(255, 255, 255));
+  viewer->setBackgroundColor(QColor(100, 100, 100));
 
   set<string> filenamesSet = readDirectory(workingDirectory);
   for(set<string>::const_iterator it = filenamesSet.begin(); it != filenamesSet.end(); ++it) {
@@ -92,7 +92,7 @@ int main(int argc, char** argv) {
       if(!applyGlobalTransform) { transform = Eigen::Matrix3f::Identity(); }
       transform.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
       
-      GLParameterPoints* pointsParams = new GLParameterPoints(pointSize, Eigen::Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
+      GLParameterPoints* pointsParams = new GLParameterPoints(pointSize, Eigen::Vector4f(1.0f, 0.5f, 0.0f, 1.0f));
       pointsParams->setStep(step);
       DrawablePoints* drawablePoints = new DrawablePoints(transform, pointsParams, &cloud->points(), &cloud->normals());
       viewer->addDrawable(drawablePoints);

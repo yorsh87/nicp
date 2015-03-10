@@ -176,7 +176,7 @@ namespace pwn_viewer {
       _poses.push_back(pose);
       pwn_viewer::GLParameterCloud *rCloud = new pwn_viewer::GLParameterCloud();
       rCloud->parameterPoints()->setColor(Eigen::Vector4f(1.0f, 1.0f, 0.0f, 1.0f));
-      rCloud->parameterNormals()->setColor(Eigen::Vector4f(0.0f, 1.0f, 1.0f, 1.0f));
+      rCloud->parameterNormals()->setColor(Eigen::Vector4f(1.0f, 0.5f, 0.0f, 1.0f));
       pwn_viewer::DrawableCloud *dCloud = new pwn_viewer::DrawableCloud(_poses.back(), rCloud, cloud);
       viewer->addDrawable(dCloud);
       _referenceScene->clear();

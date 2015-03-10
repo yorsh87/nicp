@@ -55,9 +55,8 @@ endmacro(_eigen3_check_version)
 
 find_path(EIGEN3_INCLUDE_DIR NAMES signature_of_eigen3_matrix_library
     PATHS
-    ${ROMA_ROOT}/third_parties/eigen/include/eigen3
-    ${PROJECT_SOURCE_DIR}/../../third_parties/eigen/include/eigen3
-    ${PROJECT_SOURCE_DIR}/../third_parties/eigen/include/eigen3
+    /usr/local/include/eigen3
+    /usr/include/eigen3
     NO_DEFAULT_PATH
   )
 
