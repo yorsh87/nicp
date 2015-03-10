@@ -34,7 +34,7 @@ namespace pwn {
     int currentIndex = 0;
     for(size_t i = 0; i < cloud->points().size(); currentIndex++ ,i++) {
       const Point currentPoint = cloud->points()[i];
-      const Normal currentNormal = cloud->normals()[i];
+      // const Normal currentNormal = cloud->normals()[i];
 
       int r = -1, c = -1;
       float depth = 0.0f;
@@ -52,7 +52,7 @@ namespace pwn {
 	target++;
 	continue;
       }
-      const Normal &targetNormal = cloud->normals().at(targetIndex);
+      // const Normal &targetNormal = cloud->normals().at(targetIndex);
 
       Eigen::Vector4f viewPointDirection = transform.matrix().col(3)-currentPoint;
       viewPointDirection(3)=0;

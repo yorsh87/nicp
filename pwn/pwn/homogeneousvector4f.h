@@ -45,11 +45,6 @@ namespace pwn {
       inline HomogeneousVector4f(const Eigen::MatrixBase<OtherDerived> &other) : Eigen::Vector4f(other) { this->data()[3] = wCoordinate; }
     
     /**
-     *  Destructor.
-     */
-    virtual ~HomogeneousVector4f() {}
-
-    /**
      *  This methods implements the operator equal between an Homogeneous4fVector and an Eigen::MatrixBase object.
      */
     template<typename OtherDerived>

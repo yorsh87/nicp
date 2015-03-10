@@ -27,11 +27,6 @@ namespace pwn {
     }
     
     /**
-     *  Destructor.
-     */
-    virtual ~Stats() {}
-
-    /**
      *  This method returns the number of points used to compute the normal of the point.
      *  @return the number of points used to compute the normal of the point.
      *  @see setN()

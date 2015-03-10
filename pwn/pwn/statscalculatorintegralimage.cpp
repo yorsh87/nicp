@@ -48,6 +48,7 @@ namespace pwn {
 	  if(imageRadius(0) < _minImageRadius || imageRadius(1) < _minImageRadius) { continue; }
 	  if(imageRadius(0) > _maxImageRadius) { imageRadius(0) = _maxImageRadius; }
 	  if(imageRadius(1) > _maxImageRadius) { imageRadius(1) = _maxImageRadius; }
+
 	}
 
 	assert(*index < (int)statsVector.size() && "StatsCalculatorIntegralImage: index value greater than statsVector size");

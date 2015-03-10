@@ -39,7 +39,8 @@ Building on Linux
 Branches
 ----
 
-- master: current development version
+- master: current development branch
+- nicp_evaluation: experimental evaluation branch
 
 
 Examples
