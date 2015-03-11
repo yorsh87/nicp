@@ -64,7 +64,7 @@ namespace pwn_viewer {
 	  cv::Vec3b c=_rgbs->at(i);
 	  glColor3f(scale*c[0], scale*c[1], scale*c[2]);
 	}
-	glColor4f(0, fabs(n[1]), fabs(n[2]), 1.0f);
+	// glColor4f(0, fabs(n[1]), fabs(n[2]), 1.0f);
 	glNormal3f(n[0], n[1], n[2]);
       	glVertex3f(p[0], p[1], p[2]);
       }    

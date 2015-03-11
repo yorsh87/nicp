@@ -4,7 +4,7 @@ PROJECT(pwn)
 
 # Optionally compiling part
 OPTION(BUILD_PWN_VIEWER "enables PWN viewer" true)
-OPTION(BUILD_PWN_EVALUATION "enables PWN evaluation" true)
+OPTION(BUILD_PWN_EVALUATION "enables PWN evaluation" false)
 
 # The library prefix
 SET(LIB_PREFIX pwn)
