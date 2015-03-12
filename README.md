@@ -19,7 +19,7 @@ System Requirements
 
 ### Minimum
 
-- Eigen3 >= 3.2.1 
+- Eigen3 >= 3.2.0
 - OpenCV >= 2.4.8 
 
 ### Complete
