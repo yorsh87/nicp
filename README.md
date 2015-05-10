@@ -40,7 +40,6 @@ Branches
 ----
 
 - master: current development branch
-- nicp_evaluation: experimental evaluation branch
 
 
 Examples
