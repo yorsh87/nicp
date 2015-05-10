@@ -47,13 +47,8 @@ Examples
 ----
 
 Once you compiled the code you will have the following exmaple binaries:
-- pwn_simple_aligner is a binary that, given a set of depth images and a .txt file containing the list of depth images to align, perform the point cloud registrations
-- pwn_aligner same as pwn_simple_aligner, but it uses an incremental version of the algorithm 
-- pwn_aligner_gui is a simple GUI for point cloud alignment, several parameters of the algorithm can be modified with GUI buttons
-- pwn_cloud_prop_viewer simple GUI to see basic properties of a depth image / point cloud
-- pwn_simple_viewer is a GUI that given a folder allows to visualize all the point clouds, saved in .pwn format, in the folder
-
-N.B.
-----
-
-Temporarily, the NICP library will have still his old name PWN. As soon as possible all the pwn prefixes will be substituted with nicp.
+- nicp_simple_aligner is a binary that, given a set of depth images and a .txt file containing the list of depth images to align, perform the point cloud registrations
+- nicp_aligner same as nicp_simple_aligner, but it uses an incremental version of the algorithm 
+- nicp_aligner_gui is a simple GUI for point cloud alignment, several parameters of the algorithm can be modified with GUI buttons
+- nicp_cloud_prop_viewer simple GUI to see basic properties of a depth image / point cloud
+- nicp_simple_viewer is a GUI that given a folder allows to visualize all the point clouds, saved in .nicp format, in the folder
