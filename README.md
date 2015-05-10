@@ -39,7 +39,8 @@ Building on Linux
 Branches
 ----
 
-- master: current development branch
+- master : current stable branch
+- develop: current development branch
 
 
 Examples
