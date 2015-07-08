@@ -14,6 +14,9 @@ minimizes an error metric depending on both the point coordinates and the
 associated normal. This renders the algorithm more robust and accurate, thus 
 computing better transformation. 
 
+Tutorials and much more on http://jacoposerafin.com/nicp/
+----
+
 System Requirements
 ----
 
