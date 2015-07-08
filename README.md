@@ -1,4 +1,4 @@
-NICP (Normal Iterative Closest Point)
+NICP (Normal Iterative Closest Point) http://jacoposerafin.com/nicp/
 ====
 
 NICP is a novel on-line method to recursively align point clouds. This method 
