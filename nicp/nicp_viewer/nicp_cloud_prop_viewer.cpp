@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
     return 0;
   }  
   string filename(argv[1]);
-  if(filename.substr(filename.size() - 3) != "pgm" && filename.substr(filename.size() - 3) != "nicp") {
+  if(filename.substr(filename.size() - 3) != "pgm" && filename.substr(filename.size() - 4) != "nicp") {
     std::cerr << "ERROR: input filename " << filename << " of unknown extension ... quitting!" << std::endl;
     return 0;
   }
