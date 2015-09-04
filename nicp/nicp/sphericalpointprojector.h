@@ -61,6 +61,34 @@ namespace nicp {
     } 
 
     /**
+     *  This method returns the horizontal center set to the spherical point projector.
+     *  @return the horizontal center set to the spherical point projector. 
+     *  @see setHorizontalCenter()
+     */
+    inline float horizontalCenter() const { return _horizontalCenter; } 
+
+    /**
+     *  This method set the horizontal center to the one given in input.
+     *  @param horizontalCenter_ is a float value used to update the horizontal center. 
+     *  @see horizontalCenter()
+     */
+    inline void setHorizontalCenter(float horizontalCenter_)  { _horizontalCenter = horizontalCenter_; } 
+
+    /**
+     *  This method returns the vertical center set to the spherical point projector.
+     *  @return the vertical center set to the spherical point projector. 
+     *  @see setVerticalCenter()
+     */
+    inline float verticalCenter() const { return _verticalCenter; } 
+
+    /**
+     *  This method set the vertical center to the one given in input.
+     *  @param verticalCenter_ is a float value used to update the vertical center. 
+     *  @see verticalCenter()
+     */
+    inline void setVerticalCenter(float verticalCenter_)  { _verticalCenter = verticalCenter_; } 
+
+    /**
      *  Virtual method that set the size (rows and columns) of the image where the points are projected.
      *  @param imageRows_ is a constant int value used to update the number of rows. 
      *  @param imageCols_ is a constant int value used to update the number of columns. 
