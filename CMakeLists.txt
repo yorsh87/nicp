@@ -5,6 +5,7 @@ PROJECT(nicp)
 # Optionally compiling part
 OPTION(BUILD_NICP_VIEWER "enables NICP viewer" true)
 OPTION(BUILD_NICP_EVALUATION "enables NICP evaluation" false)
+OPTION(BUILD_NICP_TEST "enables NICP test" false)
 
 # The library prefix
 SET(LIB_PREFIX nicp)

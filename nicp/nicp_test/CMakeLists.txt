@@ -1,0 +1,3 @@
+ADD_EXECUTABLE(nicp_cloud2spherical nicp_cloud2spherical.cpp)
+SET_TARGET_PROPERTIES(nicp_cloud2spherical PROPERTIES OUTPUT_NAME nicp_cloud2spherical)
+TARGET_LINK_LIBRARIES(nicp_cloud2spherical nicp ${OpenCV_LIB})
