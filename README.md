@@ -45,7 +45,7 @@ Branches
 
 - master : current stable branch
 - develop: current development branch
-
+- iros2015_experiments: snapshot at the time of IROS2015 paper submission
 
 Examples
 ----
