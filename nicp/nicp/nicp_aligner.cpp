@@ -8,7 +8,7 @@
 #include "pinholepointprojector.h"
 #include "depthimageconverterintegralimage.h"
 #include "statscalculatorintegralimage.h"
-#include "aligner.h"
+#include "alignerprojective.h"
 #include "merger.h"
 
 using namespace std;
@@ -17,13 +17,13 @@ using namespace cv;
 using namespace nicp;
 
 bool fillInputParametersMap(map<string, float> &inputParameters, const string &configurationFilename);
-void setInputParameters(PinholePointProjector &pointProjector, 
+void setInputParameters(PinholePointProjector &pointProjector,
 			StatsCalculatorIntegralImage &statsCalculator,
 			PointInformationMatrixCalculator &pointInformationMatrixCalculator,
 			NormalInformationMatrixCalculator &normalInformationMatrixCalculator,
-			CorrespondenceFinder &correspondenceFinder,
+			CorrespondenceFinderProjective &correspondenceFinder,
 			Linearizer &linearizer,
-			Aligner &aligner,
+			AlignerProjective &aligner,
 			Merger &merger,
 			map<string, float> &inputParameters);
 
@@ -43,7 +43,7 @@ int main(int argc, char **argv) {
 
   // Fill input parameter map
   map<string, float> inputParameters;
-  bool fillInputParameters =  fillInputParametersMap(inputParameters, 
+  bool fillInputParameters =  fillInputParametersMap(inputParameters,
 						     argv[1]);
   if(!fillInputParameters) {
     std::cerr << "Error while reading input parameters" << std::endl;
@@ -70,31 +70,31 @@ int main(int argc, char **argv) {
   initialT.linear() = initialRotation.toRotationMatrix();
   initialT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
   int chunkStep = 10;
-  if((it = inputParameters.find("chunkStep")) != inputParameters.end()) chunkStep = (*it).second; 
+  if((it = inputParameters.find("chunkStep")) != inputParameters.end()) chunkStep = (*it).second;
 
   /*********************************************************************************
    *                         ALIGNMENT OBJECT CREATION                             *
    *********************************************************************************/
   // Create the PinholePointProjector
   PinholePointProjector pointProjector;
-  
+
   // Create StatsCalculator and InformationMatrixCalculator
-  StatsCalculatorIntegralImage statsCalculator;  
+  StatsCalculatorIntegralImage statsCalculator;
   PointInformationMatrixCalculator pointInformationMatrixCalculator;
   NormalInformationMatrixCalculator normalInformationMatrixCalculator;
-  
+
   // Create CorrespondenceFinder
-  CorrespondenceFinder correspondenceFinder;
+  CorrespondenceFinderProjective correspondenceFinder;
 
   // Create Linearizer and Aligner
   Linearizer linearizer;
-  Aligner aligner;
-  
+  AlignerProjective aligner;
+
   // Create merger
   Merger merger;
 
   // Set alignment objects properties
-  setInputParameters(pointProjector, 
+  setInputParameters(pointProjector,
 		     statsCalculator,
 		     pointInformationMatrixCalculator,
 		     normalInformationMatrixCalculator,
@@ -103,9 +103,9 @@ int main(int argc, char **argv) {
 		     aligner,
 		     merger,
 		     inputParameters);
-  
+
   // Create DepthImageConverter
-  DepthImageConverterIntegralImage converter(&pointProjector, 
+  DepthImageConverterIntegralImage converter(&pointProjector,
 					     &statsCalculator,
 					     &pointInformationMatrixCalculator,
 					     &normalInformationMatrixCalculator);
@@ -164,9 +164,9 @@ int main(int argc, char **argv) {
     }
 
     // Convert the depth image to a cloud
-    cloud = new Cloud();    
+    cloud = new Cloud();
     converter.compute(*cloud, scaledDepth, sensorOffset);
-    std::cout << "Current image " << depthFilename << std::endl;     
+    std::cout << "Current image " << depthFilename << std::endl;
 
     // If it is not the first depth align it with the previous one
     if(!firstDepth) {
@@ -176,18 +176,18 @@ int main(int argc, char **argv) {
 	scaledIndexImage.create(scaledDepth.rows, scaledDepth.cols);
       }
       converter.projector()->setTransform(sceneT * sensorOffset);
-      converter.projector()->project(scaledIndexImage, scaledDepth, referenceScene->points());    
+      converter.projector()->project(scaledIndexImage, scaledDepth, referenceScene->points());
       converter.compute(*subscene, scaledDepth, sensorOffset);
       converter.projector()->setTransform(Isometry3f::Identity());
       aligner.setReferenceCloud(subscene);
       aligner.setCurrentCloud(cloud);
       aligner.setInitialGuess(initialGuess);
       aligner.setSensorOffset(sensorOffset);
-      aligner.align();  
-      globalT = globalT * aligner.T();      
-      globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
+      aligner.align();
+      globalT = globalT * aligner.T();
+      globalT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
       sceneT = sceneT * aligner.T();
-      sceneT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
+      sceneT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
       std::cout << "Relative transformation: " << std::endl << aligner.T().matrix() << std::endl;
     }
 
@@ -196,27 +196,27 @@ int main(int argc, char **argv) {
       sprintf(buffer, "scene-%03d.nicp", counter);
       referenceScene->save(buffer, sceneT.inverse() * globalT, 1, true);
       sceneT = Eigen::Isometry3f::Identity();
-      sceneT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f; 
+      sceneT.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
       if(referenceScene) {
     	delete referenceScene;
-    	referenceScene = 0;	
+    	referenceScene = 0;
       }
       referenceScene = new Cloud();
-    }    
+    }
 
     referenceScene->add(*cloud, sceneT);
     merger.merge(referenceScene, sceneT * sensorOffset);
     converter.projector()->setTransform(Eigen::Isometry3f::Identity());
-    
+
     // Write out global transformation
-    std::cout << "Global transformation: " << std::endl << globalT.matrix() << std::endl; 
-    std::cout << "********************************************************" << std::endl; 
+    std::cout << "Global transformation: " << std::endl << globalT.matrix() << std::endl;
+    std::cout << "********************************************************" << std::endl;
     cloud->save((depthFilename + ".nicp").c_str(), globalT, 1, true);
     Quaternionf globalRotation = Quaternionf(globalT.linear());
     globalRotation.normalize();
-    os << timestamp << " " 
-       << globalT.translation().x() << " "  << globalT.translation().y() << " " << globalT.translation().z() << " " 
-       << globalRotation.x() << " " << globalRotation.y() << " " << globalRotation.z() << " " << globalRotation.w() 
+    os << timestamp << " "
+       << globalT.translation().x() << " "  << globalT.translation().y() << " " << globalT.translation().z() << " "
+       << globalRotation.x() << " " << globalRotation.y() << " " << globalRotation.z() << " " << globalRotation.w()
        << std::endl;
 
     if(cloud) {
@@ -230,7 +230,7 @@ int main(int argc, char **argv) {
   char buffer[1024];
   sprintf(buffer, "scene-%03d.nicp", counter);
   referenceScene->save(buffer, sceneT.inverse() * globalT, 1, true);
-  
+
   return 0;
 }
 
@@ -246,32 +246,32 @@ bool fillInputParametersMap(map<string, float> &inputParameters, const string &c
     char buf[1024];
     is.getline(buf, 1024);
     istringstream iss(buf);
-    
+
     // Add the parameter to the map
-    string parameter; 
+    string parameter;
     float value;
     if(!(iss >> parameter >> value)) continue;
     if(parameter[0] == '#') continue;
     inputParameters.insert(pair<string, float>(parameter, value));
   }
-  
+
   return true;
 }
 
-void setInputParameters(PinholePointProjector &pointProjector, 
+void setInputParameters(PinholePointProjector &pointProjector,
 			StatsCalculatorIntegralImage &statsCalculator,
 			PointInformationMatrixCalculator &pointInformationMatrixCalculator,
 			NormalInformationMatrixCalculator &normalInformationMatrixCalculator,
-			CorrespondenceFinder &correspondenceFinder,
+			CorrespondenceFinderProjective &correspondenceFinder,
 			Linearizer &linearizer,
-			Aligner &aligner,
+			AlignerProjective &aligner,
 			Merger &merger,
 			map<string, float> &inputParameters) {
   map<string, float>::iterator it;
 
   // Point projector
   Matrix3f cameraMatrix;
-  cameraMatrix << 
+  cameraMatrix <<
     525.0f,   0.0f, 319.5f,
       0.0f, 525.0f, 239.5f,
       0.0f,   0.0f,   1.0f;
@@ -288,7 +288,7 @@ void setInputParameters(PinholePointProjector &pointProjector,
   if((it = inputParameters.find("maxImageRadius")) != inputParameters.end()) statsCalculator.setMaxImageRadius((*it).second);
   if((it = inputParameters.find("minPoints")) != inputParameters.end()) statsCalculator.setMinPoints((*it).second);
   if((it = inputParameters.find("curvatureThreshold")) != inputParameters.end()) statsCalculator.setCurvatureThreshold((*it).second);
-  if((it = inputParameters.find("worldRadius")) != inputParameters.end()) statsCalculator.setWorldRadius((*it).second);    
+  if((it = inputParameters.find("worldRadius")) != inputParameters.end()) statsCalculator.setWorldRadius((*it).second);
   if((it = inputParameters.find("informationMatrixCurvatureThreshold")) != inputParameters.end()) {
     pointInformationMatrixCalculator.setCurvatureThreshold((*it).second);
     normalInformationMatrixCalculator.setCurvatureThreshold((*it).second);
@@ -302,11 +302,11 @@ void setInputParameters(PinholePointProjector &pointProjector,
 
   // Linearizer
   if((it = inputParameters.find("inlierMaxChi2")) != inputParameters.end()) linearizer.setInlierMaxChi2((*it).second);
-  if((it = inputParameters.find("robustKernel")) != inputParameters.end()) linearizer.setRobustKernel((*it).second);    
+  if((it = inputParameters.find("robustKernel")) != inputParameters.end()) linearizer.setRobustKernel((*it).second);
   linearizer.setAligner(&aligner);
 
   // Aligner
-  if((it = inputParameters.find("outerIterations")) != inputParameters.end()) aligner.setOuterIterations((*it).second);    
+  if((it = inputParameters.find("outerIterations")) != inputParameters.end()) aligner.setOuterIterations((*it).second);
   if((it = inputParameters.find("innerIterations")) != inputParameters.end()) aligner.setInnerIterations((*it).second);
   if((it = inputParameters.find("minInliers")) != inputParameters.end()) aligner.setMinInliers((*it).second);
   if((it = inputParameters.find("translationalMinEigenRatio")) != inputParameters.end()) aligner.setTranslationalMinEigenRatio((*it).second);
@@ -316,7 +316,7 @@ void setInputParameters(PinholePointProjector &pointProjector,
   aligner.setLinearizer(&linearizer);
 
   // Merger
-  if((it = inputParameters.find("depthThreshold")) != inputParameters.end()) merger.setMaxPointDepth((*it).second);    
-  if((it = inputParameters.find("normalThreshold")) != inputParameters.end()) merger.setNormalThreshold((*it).second);  
+  if((it = inputParameters.find("depthThreshold")) != inputParameters.end()) merger.setMaxPointDepth((*it).second);
+  if((it = inputParameters.find("normalThreshold")) != inputParameters.end()) merger.setNormalThreshold((*it).second);
   if((it = inputParameters.find("distanceThreshold")) != inputParameters.end()) merger.setDistanceThreshold((*it).second);
 }

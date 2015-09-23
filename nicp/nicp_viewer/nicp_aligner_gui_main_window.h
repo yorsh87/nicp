@@ -10,14 +10,14 @@
 #include "nicp/statscalculatorintegralimage.h"
 #include "nicp/informationmatrixcalculator.h"
 #include "nicp/depthimageconverterintegralimage.h"
-#include "nicp/correspondencefinder.h"
 #include "nicp/linearizer.h"
-#include "nicp/aligner.h"
+#include "nicp/alignerprojective.h"
+#include "nicp/alignernn.h"
 
 namespace nicp_viewer {
 
   class NICPAlignerGuiMainWindow : public QMainWindow, public Ui::MainWindow {
-    Q_OBJECT 
+    Q_OBJECT
   public:
     NICPAlignerGuiMainWindow(std::string directory, QWidget *parent = 0, Qt::WindowFlags flags = 0);
     ~NICPAlignerGuiMainWindow();
@@ -40,7 +40,7 @@ namespace nicp_viewer {
     virtual void initialGuess();
     virtual void optimize();
     virtual void merge();
-  
+
   protected:
     std::set<string> _readDirectory(std::string directory);
     void _selectProjector();
@@ -53,13 +53,17 @@ namespace nicp_viewer {
     nicp::PointProjector *_projector;
     nicp::PinholePointProjector *_pinholeProjector;
     nicp::CylindricalPointProjector *_cylindricalProjector;
-    nicp::SphericalPointProjector *_sphericalProjector;  
-    nicp::StatsCalculatorIntegralImage *_statsCalculatorIntegralImage; 
-    nicp::PointInformationMatrixCalculator *_pointInformationMatrixCalculator; 
-    nicp::NormalInformationMatrixCalculator *_normalInformationMatrixCalculator; 
-    nicp::DepthImageConverterIntegralImage *_depthImageConverterIntegralImage; 
+    nicp::SphericalPointProjector *_sphericalProjector;
+    nicp::StatsCalculatorIntegralImage *_statsCalculatorIntegralImage;
+    nicp::PointInformationMatrixCalculator *_pointInformationMatrixCalculator;
+    nicp::NormalInformationMatrixCalculator *_normalInformationMatrixCalculator;
+    nicp::DepthImageConverterIntegralImage *_depthImageConverterIntegralImage;
+    nicp::CorrespondenceFinderProjective *_correspondenceFinderProjective;
+    nicp::CorrespondenceFinderNN *_correspondenceFinderNN;
     nicp::CorrespondenceFinder *_correspondenceFinder;
     nicp::Linearizer *_linearizer;
+    nicp::AlignerProjective *_alignerProjective;
+    nicp::AlignerNN *_alignerNN;
     nicp::Aligner *_aligner;
 
     nicp::RawDepthImage _rawDepth;
