@@ -36,7 +36,7 @@ namespace nicp_viewer {
     } 
 
     // Create class objects
-    _depthScale = 0.001;
+    _depthScale = 0.001f;
     _sensorOffset = Eigen::Isometry3f::Identity();
     _sensorOffset.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
 
