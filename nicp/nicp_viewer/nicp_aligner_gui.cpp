@@ -22,6 +22,30 @@ int main(int argc, char **argv) {
   mainWindow.showMaximized();
   mainWindow.show();
 
+  /* Standard Kinect */
+  mainWindow.pinhole_projector_radioButton->setChecked(true);
+  mainWindow.fx_doubleSpinBox->setValue(525.0f);
+  mainWindow.fy_doubleSpinBox->setValue(525.0f);
+  mainWindow.cx_doubleSpinBox->setValue(319.5);
+  mainWindow.cy_doubleSpinBox->setValue(239.5);
+  mainWindow.rows_spinBox->setValue(480);
+  mainWindow.cols_spinBox->setValue(640);
+  mainWindow.min_distance_doubleSpinBox->setValue(0.5f);
+  mainWindow.max_distance_doubleSpinBox->setValue(3.0f);
+  mainWindow.min_image_radius_spinBox->setValue(20);
+  mainWindow.max_image_radius_spinBox->setValue(40);
+  mainWindow.min_points_spinBox->setValue(40);
+  mainWindow.world_radius_doubleSpinBox->setValue(0.1f);
+  mainWindow.curv_threshold_doubleSpinBox->setValue(0.2f);
+  mainWindow.normal_angle_doubleSpinBox->setValue(0.9f);
+  mainWindow.point_distance_doubleSpinBox->setValue(0.5f);
+  mainWindow.max_chi2_doubleSpinBox->setValue(100.0f);
+  mainWindow.curv_flatness_doubleSpinBox->setValue(0.02f);
+  mainWindow.statsUpdate();
+  mainWindow.correspondencesUpdate();
+  mainWindow.alignerUpdate();
+  mainWindow.projectorsUpdate();
+
   /* ETH Laser */
   // mainWindow.spherical_projector_radioButton->setChecked(true);
   // mainWindow.rows_spinBox->setValue(1000);

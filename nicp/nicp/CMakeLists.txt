@@ -1,8 +1,12 @@
 ADD_LIBRARY(nicp SHARED
   definitions.h
-  imageutils.cpp imageutils.h	
+  imageutils.cpp imageutils.h
   aligner.cpp aligner.h
+  alignernn.cpp alignernn.h
+  alignerprojective.cpp alignerprojective.h
   correspondencefinder.cpp correspondencefinder.h
+  correspondencefindernn.cpp correspondencefindernn.h
+  correspondencefinderprojective.cpp correspondencefinderprojective.h
   cylindricalpointprojector.cpp cylindricalpointprojector.h
   depthimageconverter.cpp depthimageconverter.h
   depthimageconverterintegralimage.cpp depthimageconverterintegralimage.h
@@ -14,7 +18,7 @@ ADD_LIBRARY(nicp SHARED
   informationmatrixcalculator.h informationmatrixcalculator.cpp
   linearizer.cpp linearizer.h
   merger.cpp merger.h
-  multipointprojector.cpp multipointprojector.h 
+  multipointprojector.cpp multipointprojector.h
   pinholepointprojector.cpp pinholepointprojector.h
   pointaccumulator.h
   pointintegralimage.cpp pointintegralimage.h
@@ -29,7 +33,7 @@ ADD_LIBRARY(nicp SHARED
   voxelcalculator.cpp voxelcalculator.h
 )
 SET_TARGET_PROPERTIES(nicp PROPERTIES OUTPUT_NAME ${LIB_PREFIX})
-TARGET_LINK_LIBRARIES(nicp ${OpenCV_LIBS})
+TARGET_LINK_LIBRARIES(nicp ${OpenCV_LIBS} ${FLANN_LIBRARY})
 
 ADD_EXECUTABLE(nicp_simple_aligner nicp_simple_aligner.cpp )
 SET_TARGET_PROPERTIES(nicp_simple_aligner PROPERTIES OUTPUT_NAME nicp_simple_aligner)
