@@ -46,7 +46,7 @@ namespace nicp_viewer {
     _depthImageConverterIntegralImage = new DepthImageConverterIntegralImage();
     _alignerProjective = new nicp::AlignerProjective();
     _alignerNN = new nicp::AlignerNN();
-    _aligner = _alignerNN;
+    _aligner = _alignerProjective;
     _selectProjector();
     _statsCalculatorIntegralImage = new nicp::StatsCalculatorIntegralImage();
     _pointInformationMatrixCalculator = new nicp::PointInformationMatrixCalculator();
@@ -371,19 +371,19 @@ namespace nicp_viewer {
     nicp::Cloud *currentCloud = _clouds.back();
 
     // Projective Correspondence Finder
-    // _projector->setTransform(_sensorOffset);
-    // _projector->project(_correspondenceFinderProjective->currentIndexImage(),
-    // 			_correspondenceFinderProjective->currentDepthImage(),
-    // 			currentCloud->points());
-    // _projector->setTransform(_sensorOffset);
-    // _projector->project(_correspondenceFinderProjective->referenceIndexImage(),
-    // 			_correspondenceFinderProjective->referenceDepthImage(),
-    // 			referenceCloud->points());
-    // _correspondenceFinder->compute(*referenceCloud, *currentCloud, (_poses[_poses.size() - 2].inverse() * _poses.back()).inverse());
+    _projector->setTransform(_sensorOffset);
+    _projector->project(_correspondenceFinderProjective->currentIndexImage(),
+    			_correspondenceFinderProjective->currentDepthImage(),
+    			currentCloud->points());
+    _projector->setTransform(_sensorOffset);
+    _projector->project(_correspondenceFinderProjective->referenceIndexImage(),
+    			_correspondenceFinderProjective->referenceDepthImage(),
+    			referenceCloud->points());
+    _correspondenceFinder->compute(*referenceCloud, *currentCloud, (_poses[_poses.size() - 2].inverse() * _poses.back()).inverse());
 
     // NN Correspondence Finder
-    _correspondenceFinderNN->init(*referenceCloud, *currentCloud);
-    _correspondenceFinder->compute(*referenceCloud, *currentCloud, (_poses[_poses.size() - 2].inverse() * _poses.back()).inverse());
+    // _correspondenceFinderNN->init(*referenceCloud, *currentCloud);
+    // _correspondenceFinder->compute(*referenceCloud, *currentCloud, (_poses[_poses.size() - 2].inverse() * _poses.back()).inverse());
 
     nicp_viewer::Drawable *d = viewer->drawableList().back();
     nicp_viewer::DrawableCloud *dCloud = dynamic_cast<nicp_viewer::DrawableCloud*>(d);

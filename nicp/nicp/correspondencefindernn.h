@@ -73,8 +73,8 @@ namespace nicp {
 
         std::vector<float> _reference_points;
         std::vector<float> _current_points;
-        std::vector<int> _current_indices;
-        std::vector<float> _current_distances;
+        std::vector<int> _reference_indices;
+        std::vector<float> _reference_distances;
     };
 
 }

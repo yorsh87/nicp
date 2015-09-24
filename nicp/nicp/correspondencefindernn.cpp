@@ -42,53 +42,54 @@ namespace nicp {
    }
 
    void CorrespondenceFinderNN::init(const Cloud &referenceScene, const Cloud &currentScene) {
-      _model2linear(_reference_points, referenceScene, _normal_scaling);
+      _model2linear(_current_points, currentScene, _normal_scaling);
       if(_index) { delete(_index); }
       _index = 0;
 
-      _reference_matrix = flann::Matrix<float> (&_reference_points[0],
-						referenceScene.points().size(),
-						6);
-      _index = new flann::Index< flann::L2<float> >(_reference_matrix, flann::KDTreeIndexParams());
-      _index->buildIndex();
-      _model2linear(_current_points, currentScene, _normal_scaling);
       _current_matrix = flann::Matrix<float> (&_current_points[0],
 					      currentScene.points().size(),
 					      6);
-      _current_indices.resize(currentScene.points().size() * _knn);
-      _indices_matrix = flann::Matrix<int>(&_current_indices[0],
-					   currentScene.points().size(),
+      _index = new flann::Index< flann::L2<float> >(_current_matrix, flann::KDTreeIndexParams());
+      _index->buildIndex();
+      _model2linear(_reference_points, referenceScene, _normal_scaling);
+      _reference_matrix = flann::Matrix<float> (&_reference_points[0],
+						referenceScene.points().size(),
+						6);
+      _reference_indices.resize(referenceScene.points().size() * _knn);
+      _indices_matrix = flann::Matrix<int>(&_reference_indices[0],
+					   referenceScene.points().size(),
 					   _knn);
-      _current_distances.resize(currentScene.points().size() * _knn);
-      _distances_matrix = flann::Matrix<float>(&_current_distances[0],
-					       currentScene.points().size(),
+      _reference_distances.resize(referenceScene.points().size() * _knn);
+      _distances_matrix = flann::Matrix<float>(&_reference_distances[0],
+					       referenceScene.points().size(),
 					       _knn);
       _correspondences.reserve(_indices_matrix.rows * _indices_matrix.cols);
    }
 
    void CorrespondenceFinderNN::compute(const Cloud &referenceScene, const Cloud &currentScene, Eigen::Isometry3f T) {
-      _model2linear(_current_points, currentScene, _normal_scaling, T);
+      _model2linear(_reference_points, referenceScene, _normal_scaling, T);
 
       flann::SearchParams params(16);
       params.cores = 8;
-      _index->radiusSearch(_current_matrix, _indices_matrix, _distances_matrix,
+      _index->radiusSearch(_reference_matrix, _indices_matrix, _distances_matrix,
 			   _squaredThreshold, flann::SearchParams(16));
 
       _correspondences.clear();
       _numCorrespondences = 0;
-      for(size_t cidx = 0; cidx < _indices_matrix.rows; ++cidx) {
-        int* referenceIndexPtr = _indices_matrix.ptr() + (cidx * _knn);
-        Eigen::Vector3f cn = T.linear() * currentScene.normals()[cidx].head<3>();
-        Eigen::Vector3f cp = T * currentScene.points()[cidx].head<3>();
+      for(size_t ridx = 0; ridx < _indices_matrix.rows; ++ridx) {
+	int* currentIndexPtr = _indices_matrix.ptr() + (ridx * _knn);
+        Eigen::Vector3f rn = T.linear() * referenceScene.normals()[ridx].head<3>();
+        Eigen::Vector3f rp = T * referenceScene.points()[ridx].head<3>();
 	for(size_t j = 0; j < _indices_matrix.cols; ++j) {
-	   int ridx = *referenceIndexPtr;
-	   referenceIndexPtr++;
-	   if(ridx < 0) { continue; }
-	   const Eigen::Vector3f& rn = referenceScene.normals()[ridx].head<3>();
-	   const Eigen::Vector3f& rp = referenceScene.points()[ridx].head<3>();
-	   if((cp - rp).squaredNorm() > _squaredThreshold) { continue; }
-	   if(isNan(rn) || isNan(cn)) { continue; }
-	   if(cn.dot(rn) < _inlierNormalAngularThreshold) { continue; }
+	   int cidx = *currentIndexPtr;
+	   currentIndexPtr++;
+	   if(cidx < 0) { continue; }
+	   const Eigen::Vector3f& cn = currentScene.normals()[cidx].head<3>();
+	   const Eigen::Vector3f& cp = currentScene.points()[cidx].head<3>();
+	   if(!_demotedToGICP && (rn.squaredNorm() == 0.0f || cn.squaredNorm() == 0.0f)) { continue; }
+	   if((rp - cp).squaredNorm() > _squaredThreshold) { continue; }
+	   if(isNan(cn) || isNan(rn)) { continue; }
+	   if(!_demotedToGICP && rn.dot(cn) < _inlierNormalAngularThreshold) { continue; }
 	   _correspondences.push_back(Correspondence(ridx, cidx));
 	   _numCorrespondences++;
 	}
