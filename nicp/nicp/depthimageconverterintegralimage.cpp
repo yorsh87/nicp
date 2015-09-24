@@ -10,14 +10,14 @@ namespace nicp {
   DepthImageConverterIntegralImage::DepthImageConverterIntegralImage(PointProjector *projector_,
 								     StatsCalculator *statsCalculator_,
 								     PointInformationMatrixCalculator *pointInformationMatrixCalculator_,
-								     NormalInformationMatrixCalculator *normalInformationMatrixCalculator_) : 
-    DepthImageConverter(projector_, 
-			statsCalculator_, 
-			pointInformationMatrixCalculator_, 
+								     NormalInformationMatrixCalculator *normalInformationMatrixCalculator_) :
+    DepthImageConverter(projector_,
+			statsCalculator_,
+			pointInformationMatrixCalculator_,
 			normalInformationMatrixCalculator_) {}
-  
+
   void DepthImageConverterIntegralImage::compute(Cloud &cloud,
-						 const DepthImage &depthImage, 
+						 const DepthImage &depthImage,
 						 const Eigen::Isometry3f &sensorOffset) {
     assert(_projector && "DepthImageConverterIntegralImage: missing _projector");
     assert(_statsCalculator && "DepthImageConverterIntegralImage: missing _statsCalculator");
@@ -28,12 +28,12 @@ namespace nicp {
     StatsCalculatorIntegralImage *statsCalculator = 0;
     statsCalculator = dynamic_cast<StatsCalculatorIntegralImage*>(_statsCalculator);
     assert(statsCalculator && "DepthImageConverterIntegralImage: _statsCalculator of non type StatsCalculatorIntegralImage");
-    
+
     const float _normalWorldRadius = statsCalculator->worldRadius();
     cloud.clear();
-    _projector->setImageSize(depthImage.rows, depthImage.cols);
-    
-    // Resizing the temporaries    
+    // _projector->setImageSize(depthImage.rows, depthImage.cols);
+
+    // Resizing the temporaries
     if (depthImage.rows != _indexImage.rows || depthImage.cols != _indexImage.cols){
       _indexImage.create(depthImage.rows, depthImage.cols);
     }
@@ -44,7 +44,7 @@ namespace nicp {
 
     // Computing the intervals
     _projector->projectIntervals(statsCalculator->intervalImage(), depthImage, _normalWorldRadius);
-    
+
     // Compute stats
     // If it is a cylindrical or spherical projector suppress image radius for better normals
     SphericalPointProjector* sphericalProjector = 0;
@@ -68,7 +68,7 @@ namespace nicp {
 
   void DepthImageConverterIntegralImage::compute(Cloud &cloud,
 						 const DepthImage &depthImage,
-						 const RGBImage &rgbImage, 
+						 const RGBImage &rgbImage,
 						 const Eigen::Isometry3f &sensorOffset) {
     assert(_projector && "DepthImageConverterIntegralImage: missing _projector");
     assert(_statsCalculator && "DepthImageConverterIntegralImage: missing _statsCalculator");
@@ -78,13 +78,13 @@ namespace nicp {
     StatsCalculatorIntegralImage *statsCalculator = 0;
     statsCalculator = dynamic_cast<StatsCalculatorIntegralImage*>(_statsCalculator);
     assert(statsCalculator && "DepthImageConverterIntegralImage: _statsCalculator of non type StatsCalculatorIntegralImage");
-    
+
 
     const float _normalWorldRadius = statsCalculator->worldRadius();
     cloud.clear();
-    _projector->setImageSize(depthImage.rows, depthImage.cols);
-    
-    // Resizing the temporaries    
+    // _projector->setImageSize(depthImage.rows, depthImage.cols);
+
+    // Resizing the temporaries
     if (depthImage.rows != _indexImage.rows || depthImage.cols != _indexImage.cols){
       _indexImage.create(depthImage.rows, depthImage.cols);
     }
@@ -92,10 +92,10 @@ namespace nicp {
     // Unprojecting
     _projector->setTransform(Eigen::Isometry3f::Identity());
     _projector->unProject(cloud.points(), cloud.gaussians(), _indexImage, depthImage);
-    
+
     // Computing the intervals
     _projector->projectIntervals(statsCalculator->intervalImage(), depthImage, _normalWorldRadius);
- 
+
     // Compute stats
     statsCalculator->compute(cloud.normals(),
 			     cloud.stats(),

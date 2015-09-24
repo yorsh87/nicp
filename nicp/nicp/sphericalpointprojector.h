@@ -6,8 +6,8 @@ namespace nicp {
 
   /** \class SphericalPointProjector sphericalpointprojector.h "sphericalpointprojector.h"
    *  \brief Class for point projection/unprojection based on a spherical camera mdel.
-   *  
-   *  This class extends the PointProjector class in order to provide point 
+   *
+   *  This class extends the PointProjector class in order to provide point
    *  projection/unprojection based on a spherical camera model.
    */
   class SphericalPointProjector : virtual public PointProjector {
@@ -17,10 +17,10 @@ namespace nicp {
     /**
      *  Empty constructor.
      *  This constructor creates a PinholePointProjector object with default values for all its
-     *  attributes. The camera matrix has to be set. 
+     *  attributes. The camera matrix has to be set.
      */
-    SphericalPointProjector(); 
-    
+    SphericalPointProjector();
+
     /**
      *  Destructor.
      */
@@ -28,123 +28,126 @@ namespace nicp {
 
     /**
      *  This method returns the horizontal field of view set to the spherical point projector.
-     *  @return the horizontal field of view set to the spherical point projector. 
+     *  @return the horizontal field of view set to the spherical point projector.
      *  @see setHorizontalFov()
      */
-    inline float horizontalFov() const { return _horizontalFov; } 
+    inline float horizontalFov() const { return _horizontalFov; }
 
     /**
      *  This method set the horizontal field of view to the one given in input.
-     *  @param horizontalFov_ is a float value used to update the angular field of view. 
+     *  @param horizontalFov_ is a float value used to update the angular field of view.
      *  @see horizontalFov()
      */
-    inline void setHorizontalFov(float horizontalFov_)  { 
-      _horizontalFov = horizontalFov_; 
+    inline void setHorizontalFov(float horizontalFov_)  {
+      _horizontalFov = horizontalFov_;
       _updateParameters();
     }
 
     /**
      *  This method returns the vertical field of view set to the spherical point projector.
-     *  @return the vertical field of view set to the spherical point projector. 
+     *  @return the vertical field of view set to the spherical point projector.
      *  @see setVerticalFov()
      */
-    inline float verticalFov() const { return _verticalFov; } 
+    inline float verticalFov() const { return _verticalFov; }
 
     /**
      *  This method set the vertical field of view to the one given in input.
-     *  @param verticalFov_ is a float value used to update the angular field of view. 
+     *  @param verticalFov_ is a float value used to update the angular field of view.
      *  @see verticalFov()
      */
-    inline void setVerticalFov(float verticalFov_)  { 
-      _verticalFov = verticalFov_; 
+    inline void setVerticalFov(float verticalFov_)  {
+      _verticalFov = verticalFov_;
       _updateParameters();
-    } 
+    }
+
+    inline float horizontalResolution() const { return _horizontalResolution; }
+    inline float verticalResolution() const { return _verticalResolution; }
 
     /**
      *  This method returns the horizontal center set to the spherical point projector.
-     *  @return the horizontal center set to the spherical point projector. 
+     *  @return the horizontal center set to the spherical point projector.
      *  @see setHorizontalCenter()
      */
-    inline float horizontalCenter() const { return _horizontalCenter; } 
+    inline float horizontalCenter() const { return _horizontalCenter; }
 
     /**
      *  This method set the horizontal center to the one given in input.
-     *  @param horizontalCenter_ is a float value used to update the horizontal center. 
+     *  @param horizontalCenter_ is a float value used to update the horizontal center.
      *  @see horizontalCenter()
      */
-    inline void setHorizontalCenter(float horizontalCenter_)  { _horizontalCenter = horizontalCenter_; } 
+    inline void setHorizontalCenter(float horizontalCenter_)  { _horizontalCenter = horizontalCenter_; }
 
     /**
      *  This method returns the vertical center set to the spherical point projector.
-     *  @return the vertical center set to the spherical point projector. 
+     *  @return the vertical center set to the spherical point projector.
      *  @see setVerticalCenter()
      */
-    inline float verticalCenter() const { return _verticalCenter; } 
+    inline float verticalCenter() const { return _verticalCenter; }
 
     /**
      *  This method set the vertical center to the one given in input.
-     *  @param verticalCenter_ is a float value used to update the vertical center. 
+     *  @param verticalCenter_ is a float value used to update the vertical center.
      *  @see verticalCenter()
      */
-    inline void setVerticalCenter(float verticalCenter_)  { _verticalCenter = verticalCenter_; } 
+    inline void setVerticalCenter(float verticalCenter_)  { _verticalCenter = verticalCenter_; }
 
     /**
      *  Virtual method that set the size (rows and columns) of the image where the points are projected.
-     *  @param imageRows_ is a constant int value used to update the number of rows. 
-     *  @param imageCols_ is a constant int value used to update the number of columns. 
+     *  @param imageRows_ is a constant int value used to update the number of rows.
+     *  @param imageCols_ is a constant int value used to update the number of columns.
      *  @see imageRows()
      *  @see imageCols()
      */
     virtual inline void setImageSize(const int imageRows_, const int imageCols_) {
       PointProjector::setImageSize(imageRows_, imageCols_);
       _updateParameters();
-    }    
+    }
 
     /**
      *  Virtual method that set the pose transform to the one given in input.
-     *  @param transform_ is a constant reference to the isometry used to update the pose transform. 
+     *  @param transform_ is a constant reference to the isometry used to update the pose transform.
      *  @see transform()
      */
-    virtual inline void setTransform(const Eigen::Isometry3f &transform_) { 
-      _transform = transform_; 
+    virtual inline void setTransform(const Eigen::Isometry3f &transform_) {
+      _transform = transform_;
       _transform.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
       _updateParameters();
     }
-    
+
     /**
-     *  Virtual method that projects a given set of homogeneous points from the 3D euclidean space to 
+     *  Virtual method that projects a given set of homogeneous points from the 3D euclidean space to
      *  the spherical image space space. This method stores the result
-     *  in two images given in input. The projected points that falls out of the image or that are 
+     *  in two images given in input. The projected points that falls out of the image or that are
      *  behind other points are not stored in the images.
-     *  @param indexImage is an output parameter which is a reference to an image containing indices. 
-     *  Each element of this matrix contains the index of the corresponding point in the vector of points given 
+     *  @param indexImage is an output parameter which is a reference to an image containing indices.
+     *  Each element of this matrix contains the index of the corresponding point in the vector of points given
      *  in input.
-     *  @param depthImage is an output parameter which is a reference to an image containing the depth values 
+     *  @param depthImage is an output parameter which is a reference to an image containing the depth values
      *  of the projected points in meters.
-     *  @param points is the input parameter which is a constant reference to a vector containing the set 
+     *  @param points is the input parameter which is a constant reference to a vector containing the set
      *  of homogeneous points to project.
      *  @see unProject()
      *  @see projectIntervals()
      */
-    virtual void project(IntImage &indexImage, 
-			 DepthImage &depthImage, 
+    virtual void project(IntImage &indexImage,
+			 DepthImage &depthImage,
 			 const PointVector& points) const;
 
     /**
      *  Virtual method that unprojects to the 3D euclidean space the points contained in a spherical depth image
      *  This method stores the unprojected points in a vector of points and generates
      *  the associated index image.
-     *  @param points is an output parameter which is a reference to a vector containing the set 
+     *  @param points is an output parameter which is a reference to a vector containing the set
      *  of homogeneous points to unproject to the 3D euclidean space.
-     *  @param indexImage is an output parameter which is a reference to an image containing indices. 
+     *  @param indexImage is an output parameter which is a reference to an image containing indices.
      *  Each element of this matrix contains the index of the corresponding point in the computed vector of points.
-     *  @param depthImage is an output parameter which is a constant reference to an image containing the depth values 
+     *  @param depthImage is an output parameter which is a constant reference to an image containing the depth values
      *  in meters.
      *  @see project()
      *  @see projectIntervals()
-     */    
-    virtual void unProject(PointVector &points, 
-			   IntImage &indexImage, 
+     */
+    virtual void unProject(PointVector &points,
+			   IntImage &indexImage,
 			   const DepthImage &depthImage) const;
 
     /**
@@ -152,13 +155,13 @@ namespace nicp {
      *  This method stores the unprojected points in a vector of points and generates
      *  the associated index image. It also compute a vector of gaussians reprensenting the intrinsic error
      *  of the sensor used to acquire the input depth image.
-     *  @param points is an output parameter which is a reference to a vector containing the set 
+     *  @param points is an output parameter which is a reference to a vector containing the set
      *  of homogeneous points to unproject to the 3D euclidean space.
-     *  @param gaussians is an output parameter which is a reference to a vector containing the set 
+     *  @param gaussians is an output parameter which is a reference to a vector containing the set
      *  of gaussians representing the intrinsic error of the sensor used to acquire the input depth image.
-     *  @param indexImage is an output parameter which is a reference to an image containing indices. 
+     *  @param indexImage is an output parameter which is a reference to an image containing indices.
      *  Each element of this matrix contains the index of the corresponding point in the computed vector of points.
-     *  @param depthImage is an output parameter which is a constant reference to an image containing the depth values 
+     *  @param depthImage is an output parameter which is a constant reference to an image containing the depth values
      *  in meters.
      *  @see project()
      *  @see projectIntervals()
@@ -170,20 +173,20 @@ namespace nicp {
     /**
      *  Virtual method that projects on the output image the size in pixels of a square regions
      *  around the respective point in the input spherical depth image.
-     *  @param intervalImage is the output parameter which is a reference to an image containing the size of the square 
+     *  @param intervalImage is the output parameter which is a reference to an image containing the size of the square
      *  regions around the point in the depth image given in input.
      *  @param depthImage is an input parameter which is a constant reference to an image containing depth values in meters.
-     *  @param worldRadius is an input parameter containing a float representing the radius of a sphere in the 3D euclidean 
+     *  @param worldRadius is an input parameter containing a float representing the radius of a sphere in the 3D euclidean
      *  space used to determine the size of the square regions.
      *  @see project()
      *  @see projectInterval()
      */
-    virtual void projectIntervals(IntervalImage &intervalImage, 
-				  const DepthImage &depthImage, 
-				  const float worldRadius) const;  
-  
+    virtual void projectIntervals(IntervalImage &intervalImage,
+				  const DepthImage &depthImage,
+				  const float worldRadius) const;
+
     /**
-     *  Virtual method that projects a given point from the 3D euclidean space to 
+     *  Virtual method that projects a given point from the 3D euclidean space to
      *  the spherical image space. This method stores the result
      *  in three output parameters representing the image coordinates (row and column) and a depth value.
      *  @param x is an output int value that will contain the raw coordinate of the projected input point in the depth image.
@@ -191,7 +194,7 @@ namespace nicp {
      *  @param f is an output parameter which is a reference to a float that will contain the depth values of the projected input point.
      *  @param p is the input parameter which is a constant reference to an homogeneous point to project.
      *  @return true if the projection is valid, false otherwise.
-     *  @see project() 
+     *  @see project()
      */
     virtual inline bool project(int &x, int &y, float &f, const Point &p) const { return _project(x, y, f, p); }
 
@@ -202,19 +205,19 @@ namespace nicp {
      *  @param p is the output parameter which is a reference to a the unprojected homogenous point to the 3D euclidean space.
      *  @param x is an input parameter representing the row coordinate of the input depth point.
      *  @param y is an input parameter representing the column coordinate of the input depth point.
-     *  @param d is an input value containing the depth value of the depth point. 
+     *  @param d is an input value containing the depth value of the depth point.
      *  @return true if the unprojection is valid, false otherwise.
-     *  @see unProject() 
+     *  @see unProject()
      */
     virtual inline bool unProject(Point &p, const int x, const int y, const float d) const { return _unProject(p, x, y, d); }
 
     /**
-     *  Virtual method that projects the size in pixels of a square regions around the point specified by the 
+     *  Virtual method that projects the size in pixels of a square regions around the point specified by the
      *  the input values.
-     *  @param x is an input int value representing the raw of the input point in the depth image.  
+     *  @param x is an input int value representing the raw of the input point in the depth image.
      *  @param y is an input int value representing the column of the input point in the depth image.
-     *  @param d is an input value containing the depth value of the input point. 
-     *  @param worldRadius is an input parameter containing a float representing the radius of a sphere in the 3D euclidean 
+     *  @param d is an input value containing the depth value of the input point.
+     *  @param worldRadius is an input parameter containing a float representing the radius of a sphere in the 3D euclidean
      *  space used to determine the size of the square regions.
      *  @return an int value representing the size in pixels of the square region around the input point.
      *  @see projectIntervals()
@@ -222,16 +225,16 @@ namespace nicp {
     virtual inline cv::Vec2i projectInterval(const int x, const int y, const float d, const float worldRadius) const { return _projectInterval(x, y, d, worldRadius); }
 
     /**
-     *  This method is called when is necessary to update the internal parameters used 
+     *  This method is called when is necessary to update the internal parameters used
      *  for point projection/unprojection.
      */
     void _updateParameters();
-    
+
     /**
      *  Method that updates the projector structures in order to handle different size of the
      *  image where the point are projected. If scalingFactor is greater than 1.0 the image will be bigger
      *  (for example in case it's 2.0 the size of the image will be 2 times the size of the original one).
-     *  If scalingFactor is lesser than 1.0 the image will be smaller (for example in case it's 0.5 the size 
+     *  If scalingFactor is lesser than 1.0 the image will be smaller (for example in case it's 0.5 the size
      *  of the image will be half the size of the original one).
      *  @param scalingFactor is a float value used to update the projector structures.
      */
@@ -239,7 +242,7 @@ namespace nicp {
 
   protected:
     /**
-     *  Internal method that projects a given point from the 3D euclidean space to 
+     *  Internal method that projects a given point from the 3D euclidean space to
      *  the spherical image space. This method stores the result
      *  in three output parameters representing the image coordinates (row and column) and a depth value.
      *  @param x is an output int value that will contain the raw coordinate of the projected input point in the depth image.
@@ -247,7 +250,7 @@ namespace nicp {
      *  @param d is an output parameter which is a reference to a float that will contain the depth values of the projected input point.
      *  @param p is the input parameter which is a constant reference to an homogeneous point to project.
      *  @return true if the projection is valid, false otherwise.
-     *  @see project() 
+     *  @see project()
      */
     inline bool _project(int &x, int &y, float &d, const Point &p) const {
       // Point in camera coordinates;
@@ -261,7 +264,7 @@ namespace nicp {
       x = (int)(_horizontalResolution * theta + _horizontalCenter);
       y = (int)(_verticalResolution * phi + _verticalCenter);
       return true;
-    } 
+    }
 
     /**
      *  Internal method that unprojects to the 3D euclidean space the spherical point given in input.
@@ -270,9 +273,9 @@ namespace nicp {
      *  @param p is the output parameter which is a reference to a the unprojected homogenous point to the 3D euclidean space.
      *  @param x_ is an input parameter representing the row coordinate of the input depth point.
      *  @param y_ is an input parameter representing the column coordinate of the input depth point.
-     *  @param d is an input value containing the depth value of the depth point. 
+     *  @param d is an input value containing the depth value of the depth point.
      *  @return true if the unprojection is valid, false otherwise.
-     *  @see unProject() 
+     *  @see unProject()
      */
     inline bool _unProject(Point &p, const int x_, const int y_, const float d) const {
       if(d < _minDistance || d > _maxDistance)
@@ -287,14 +290,14 @@ namespace nicp {
       p = _transform * Eigen::Vector3f(x, y, z);
       return true;
     }
-  
+
     /**
-     *  Internal method that projects the size in pixels of a square regions around the point specified by the 
+     *  Internal method that projects the size in pixels of a square regions around the point specified by the
      *  the input values.
-     *  @param x_ is an input int value representing the raw of the input point in the depth image.  
+     *  @param x_ is an input int value representing the raw of the input point in the depth image.
      *  @param y_ is an input int value representing the column of the input point in the depth image.
-     *  @param d is an input value containing the depth value of the input point. 
-     *  @param worldRadius is an input parameter containing a float representing the radius of a sphere in the 3D euclidean 
+     *  @param d is an input value containing the depth value of the input point.
+     *  @param worldRadius is an input parameter containing a float representing the radius of a sphere in the 3D euclidean
      *  space used to determine the size of the square regions.
      *  @return an int value representing the size in pixels of the square region around the input point.
      *  @see projectIntervals()
@@ -304,7 +307,7 @@ namespace nicp {
       if(x_ || y_) {}
       // Point in camera coordinates;
       if(d > _maxDistance || d < _minDistance)
-      	return cv::Vec2i(-1, -1);      
+      	return cv::Vec2i(-1, -1);
       Eigen::Vector4f cp = Eigen::Vector4f(worldRadius, worldRadius, d, 1.0f);
       float theta = atan2(cp.x(), cp.z());
       float phi = atan2(cp.y(), d);
@@ -320,7 +323,7 @@ namespace nicp {
     float _horizontalResolution; /**< Horizontal resolution indicating how many degrees there are between two columns of the depth image where the projector projects the points. */
     float _inverseHorizontalResolution; /**< Inverse of the horizontal resolution. */
     float _verticalResolution; /**< Vertical resolution indicating how many degrees there are between two columns of the depth image where the projector projects the points. */
-    float _inverseVerticalResolution; /**< Inverse of the vertical resolution. */    
+    float _inverseVerticalResolution; /**< Inverse of the vertical resolution. */
     Eigen::Isometry3f _iT; /**< Inverse of the homogeneous transformation of the projector. */
   };
 
