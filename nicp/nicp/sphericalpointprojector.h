@@ -308,7 +308,7 @@ namespace nicp {
       // Point in camera coordinates;
       if(d > _maxDistance || d < _minDistance)
       	return cv::Vec2i(-1, -1);
-      Eigen::Vector4f cp = Eigen::Vector4f(worldRadius, worldRadius, d, 1.0f);
+      Eigen::Vector4f cp = Eigen::Vector4f(worldRadius + d * 0.01f, worldRadius + d * 0.01f, d, 1.0f);
       float theta = atan2(cp.x(), cp.z());
       float phi = atan2(cp.y(), d);
       int x = (int)(_horizontalResolution * theta);
