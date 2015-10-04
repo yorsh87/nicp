@@ -39,7 +39,7 @@ namespace nicp {
     }
 
     // Unprojecting
-    _projector->setTransform(Eigen::Isometry3f::Identity());
+    // _projector->setTransform(Eigen::Isometry3f::Identity());
     _projector->unProject(cloud.points(), cloud.gaussians(), _indexImage, depthImage);
 
     // Computing the intervals
