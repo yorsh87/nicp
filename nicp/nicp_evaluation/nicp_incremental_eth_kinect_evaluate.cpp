@@ -616,6 +616,7 @@ public:
       E.diagonal().array() -= 1;
       _globalT.linear() -= 0.5 * R * E;
 
+      _referenceScene->transformInPlace(_deltaT.inverse());
       _converter.projector()->project(_referenceScaledIndeces, _referenceScaledDepth, _referenceScene->points());
       compareDepths(_inDistance, _inNum, _outDistance, _outNum,
 		    _referenceScaledDepth, _referenceScaledIndeces,
@@ -629,8 +630,7 @@ public:
 	 _referenceScene = new Cloud();
 	 if(_viewer) { _viewer->resetReferenceScene(); }
       }
-      _referenceScene->add(*_currentCloud, _deltaT);
-      _referenceScene->transformInPlace(_deltaT.inverse());
+      _referenceScene->add(*_currentCloud);
       _merger.merge(_referenceScene);
       _seq++;
       _tEnd = get_time();
@@ -644,7 +644,7 @@ public:
 		<< "[update: " << _tUpdate << "] "
 		<< "[total: " << _tInput + _tAlign + _tUpdate << "]" << std::endl;
 
-      return _tAlign + _tUpdate;
+      return _tInput + _tAlign + _tUpdate;
    }
 
 protected:

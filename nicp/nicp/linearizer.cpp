@@ -48,8 +48,8 @@ namespace nicp {
       Eigen::Vector4f br;
       int inliers;
       float error;
-      Htt = Matrix4f::Zero(); 
-      Htr = Matrix4f::Zero(); 
+      Htt = Matrix4f::Zero();
+      Htr = Matrix4f::Zero();
       Hrr = Matrix4f::Zero();
       bt = Vector4f::Zero();
       br = Vector4f::Zero();
@@ -61,15 +61,15 @@ namespace nicp {
 	const Normal referenceNormal = _T * _aligner->referenceCloud()->normals()[correspondence.referenceIndex];
 	const Point &currentPoint = _aligner->currentCloud()->points()[correspondence.currentIndex];
 	const Normal &currentNormal = _aligner->currentCloud()->normals()[correspondence.currentIndex];
-	InformationMatrix omegaP = pointOmegas[correspondence.currentIndex];	
+	InformationMatrix omegaP = pointOmegas[correspondence.currentIndex];
 	InformationMatrix omegaN = _scale * normalOmegas[correspondence.currentIndex];
 	if(_zScaling) {
 	  omegaP *= 1.0f / fabs(currentPoint.z());
 	  omegaN *= 1.0f / fabs(currentPoint.z());
 	}
-	
+
 	if(_demotedToGeneralizedICP) { omegaN.setZero(); }
-      
+
 	const Vector4f pointError = referencePoint - currentPoint;
 	const Vector4f normalError = referenceNormal - currentNormal;
 	const Vector4f ep = omegaP * pointError;
@@ -80,12 +80,18 @@ namespace nicp {
 	if(localError > _inlierMaxChi2) {
 	  if (_robustKernel) {
 	    kscale = _inlierMaxChi2 / localError;
-	  } 
+	  }
 	  else {
 	    continue;
 	  }
 	}
 	inliers++;
+
+	// HAKKE
+	if(referenceNormal.y() < -0.75 || currentNormal.y() < -0.75) {
+	   kscale = 0.1;
+	}
+
 	error += kscale * localError;
 	Matrix4f Sp = skew(referencePoint);
 	Matrix4f Sn = skew(referenceNormal);
