@@ -28,18 +28,24 @@ using namespace cv;
 using namespace nicp;
 using namespace nicp_viewer;
 
+#if (((QGLVIEWER_VERSION & 0xff0000) >> 16) >= 2 && ((QGLVIEWER_VERSION & 0x00ff00) >> 8) >= 6)
+#define qglv_real qreal
+#else
+#define qglv_real float
+#endif
+
 class StandardCamera: public qglviewer::Camera {
 public:
    StandardCamera(): _standard(true) {}
 
-   float zNear() const {
-      if(_standard) { return 0.001f; }
-      else { return Camera::zNear(); }
+   qglv_real zNear() const {
+     if(_standard) { return qglv_real(0.001f); }
+     else { return Camera::zNear(); }
    }
 
-   float zFar() const {
-      if(_standard) { return 10000.0f; }
-      else { return Camera::zFar(); }
+   qglv_real zFar() const {
+     if(_standard) { return qglv_real(10000.0f); }
+     else { return Camera::zFar(); }
    }
 
    bool standard() const { return _standard; }

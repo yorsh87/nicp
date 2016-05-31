@@ -87,11 +87,6 @@ namespace nicp {
 	}
 	inliers++;
 
-	// HAKKE
-	if(referenceNormal.y() < -0.75 || currentNormal.y() < -0.75) {
-	   kscale = 0.1;
-	}
-
 	error += kscale * localError;
 	Matrix4f Sp = skew(referencePoint);
 	Matrix4f Sn = skew(referenceNormal);

@@ -6,22 +6,28 @@
 
 using namespace Eigen;
 
-namespace nicp_viewer {
+#if (((QGLVIEWER_VERSION & 0xff0000) >> 16) >= 2 && ((QGLVIEWER_VERSION & 0x00ff00) >> 8) >= 6)
+#define qglv_real qreal
+#else
+#define qglv_real float
+#endif
 
+namespace nicp_viewer {
+  
   class StandardCamera : public qglviewer::Camera {
   public:
     StandardCamera() : _standard(true) {}
   
-    float zNear() const {
+    qglv_real zNear() const {
       if(_standard) 
-	return 0.001f; 
+	return qglv_real(0.001f); 
       else 
 	return Camera::zNear(); 
     }
 
-    float zFar() const {  
+    qglv_real zFar() const {  
       if(_standard) 
-	return 10000.0f; 
+	return qglv_real(10000.0f); 
       else 
 	return Camera::zFar();
     }
