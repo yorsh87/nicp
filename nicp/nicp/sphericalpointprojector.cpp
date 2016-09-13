@@ -5,7 +5,7 @@
 using namespace std;
 
 namespace nicp {
-  
+
   SphericalPointProjector::SphericalPointProjector() : PointProjector() {
     _imageRows = 480;
     _imageCols = 640;
@@ -21,28 +21,28 @@ namespace nicp {
     _inverseHorizontalResolution = 1.0f / _horizontalResolution;
     _verticalResolution = _imageRows / (2.0f * _verticalFov);
     _inverseVerticalResolution = 1.0f / _verticalResolution;
-    _horizontalCenter = _imageCols / 2.0f;
-    _verticalCenter = _imageRows / 2.0f;
   }
 
   void  SphericalPointProjector::scale(float scalingFactor) {
     PointProjector::scale(scalingFactor);
+    _horizontalCenter = _imageCols / 2.0f;
+    _verticalCenter = _imageRows / 2.0f;
     _updateParameters();
   }
 
   void SphericalPointProjector::project(IntImage &indexImage,
-					DepthImage &depthImage, 
+					DepthImage &depthImage,
 					const PointVector &points) const {
-    if(_imageRows == 0 ||  _imageCols == 0) { 
+    if(_imageRows == 0 ||  _imageCols == 0) {
       throw "SphericalPointProjector: _imageRows and/or _imageCols are zero";
     }
     indexImage.create(_imageRows, _imageCols);
     depthImage.create(_imageRows, _imageCols);
     depthImage.setTo(cv::Scalar(std::numeric_limits<float>::max()));
-    indexImage.setTo(cv::Scalar(-1));    
+    indexImage.setTo(cv::Scalar(-1));
     float *drowPtrs[_imageRows];
     int *irowPtrs[_imageRows];
-    for(int i = 0; i < _imageRows; i++) { 
+    for(int i = 0; i < _imageRows; i++) {
       drowPtrs[i] = &depthImage(i, 0);
       irowPtrs[i] = &indexImage(i, 0);
     }
@@ -65,10 +65,10 @@ namespace nicp {
     }
   }
 
-  void SphericalPointProjector::unProject(PointVector &points, 
+  void SphericalPointProjector::unProject(PointVector &points,
 					  IntImage &indexImage,
 					  const DepthImage &depthImage) const {
-    if(_imageRows == 0 ||  _imageCols == 0) { 
+    if(_imageRows == 0 ||  _imageCols == 0) {
       throw "SphericalPointProjector: Depth image has zero dimensions";
     }
     points.resize(depthImage.rows * depthImage.cols);
@@ -91,11 +91,11 @@ namespace nicp {
     points.resize(count);
   }
 
-  void SphericalPointProjector::unProject(PointVector &points, 
+  void SphericalPointProjector::unProject(PointVector &points,
 					  Gaussian3fVector &gaussians,
 					  IntImage &indexImage,
 					  const DepthImage &depthImage) const {
-    if(_imageRows == 0 ||  _imageCols == 0) { 
+    if(_imageRows == 0 ||  _imageCols == 0) {
       throw "SphericalPointProjector: Depth image has zero dimensions";
     }
     points.resize(depthImage.rows * depthImage.cols);
@@ -107,7 +107,7 @@ namespace nicp {
     for(int r = 0; r < depthImage.rows; r++) {
     	const float *f = &depthImage(r, 0);
     	int *i = &indexImage(r, 0);
-    	for(int c = 0; c < depthImage.cols; c++, f++, i++) {      
+    	for(int c = 0; c < depthImage.cols; c++, f++, i++) {
     	  if(!_unProject(*point, c, r, *f)) {
     	    *i = -1;
     	    continue;
@@ -124,12 +124,12 @@ namespace nicp {
     gaussians.resize(count);
   }
 
-  void SphericalPointProjector::projectIntervals(IntervalImage &intervalImage, 
-						 const DepthImage &depthImage, 
+  void SphericalPointProjector::projectIntervals(IntervalImage &intervalImage,
+						 const DepthImage &depthImage,
 						 const float worldRadius) const {
-    if(_imageRows == 0 ||  _imageCols == 0) { 
+    if(_imageRows == 0 ||  _imageCols == 0) {
       throw "SphericalPointProjector: Depth image has zero dimensions";
-    }    
+    }
     intervalImage.create(depthImage.rows, depthImage.cols);
     for(int r = 0; r < depthImage.rows; r++){
     	const float *f = &depthImage(r, 0);
