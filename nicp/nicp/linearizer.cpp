@@ -13,8 +13,9 @@ namespace nicp {
     _inlierMaxChi2 = 9e3;
     _robustKernel = true;
     _demotedToGeneralizedICP = false;
-    _zScaling = true;
+    _zScaling = false;
     _scale = 1.0f;
+    _T.matrix() = Eigen::Matrix4f::Identity();
   }
 
   void Linearizer::update() {
@@ -55,7 +56,7 @@ namespace nicp {
       br = Vector4f::Zero();
       error = 0;
       inliers = 0;
-      for(int i = imin; i < imax; i++) {
+      for(int i = imin; i < imax; i++) {	
 	const Correspondence &correspondence = _aligner->correspondenceFinder()->correspondences()[i];
 	const Point referencePoint = _T * _aligner->referenceCloud()->points()[correspondence.referenceIndex];
 	const Normal referenceNormal = _T * _aligner->referenceCloud()->normals()[correspondence.referenceIndex];
@@ -76,6 +77,7 @@ namespace nicp {
 	const Vector4f en = omegaN * normalError;
 
 	float localError = pointError.dot(ep) + normalError.dot(en);
+
 	float kscale = 1;
 	if(localError > _inlierMaxChi2) {
 	  if (_robustKernel) {
@@ -86,7 +88,8 @@ namespace nicp {
 	  }
 	}
 	inliers++;
-	error += kscale * localError;
+	error += kscale * localError;	
+	
 	Matrix4f Sp = skew(referencePoint);
 	Matrix4f Sn = skew(referenceNormal);
 	Htt.noalias() += omegaP * kscale;

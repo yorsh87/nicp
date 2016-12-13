@@ -1,7 +1,6 @@
 #include "depthimageconverterintegralimage.h"
 #include "statscalculatorintegralimage.h"
 #include "sphericalpointprojector.h"
-#include "cylindricalpointprojector.h"
 
 #include <opencv2/highgui/highgui.hpp>
 
@@ -46,13 +45,11 @@ namespace nicp {
     _projector->projectIntervals(statsCalculator->intervalImage(), depthImage, _normalWorldRadius);
     
     // Compute stats
-    // If it is a cylindrical or spherical projector suppress image radius for better normals
+    // If it is a spherical projector suppress image radius for better normals
     SphericalPointProjector* sphericalProjector = 0;
-    CylindricalPointProjector* cylindricalProjector = 0;
     bool suppressImageRadius = false;
     sphericalProjector = dynamic_cast<SphericalPointProjector*>(_projector);
-    cylindricalProjector = dynamic_cast<CylindricalPointProjector*>(_projector);
-    if(sphericalProjector || cylindricalProjector) { suppressImageRadius = true; }
+    if(sphericalProjector) { suppressImageRadius = true; }
     statsCalculator->compute(cloud.normals(),
 			     cloud.stats(),
 			     cloud.points(),

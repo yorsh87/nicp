@@ -7,7 +7,6 @@ ADD_LIBRARY(nicp SHARED
   correspondencefinder.cpp correspondencefinder.h
   correspondencefindernn.cpp correspondencefindernn.h
   correspondencefinderprojective.cpp correspondencefinderprojective.h
-  cylindricalpointprojector.cpp cylindricalpointprojector.h
   depthimageconverter.cpp depthimageconverter.h
   depthimageconverterintegralimage.cpp depthimageconverterintegralimage.h
   cloud.cpp cloud.h
@@ -18,7 +17,6 @@ ADD_LIBRARY(nicp SHARED
   informationmatrixcalculator.h informationmatrixcalculator.cpp
   linearizer.cpp linearizer.h
   merger.cpp merger.h
-  multipointprojector.cpp multipointprojector.h
   pinholepointprojector.cpp pinholepointprojector.h
   pointaccumulator.h
   pointintegralimage.cpp pointintegralimage.h

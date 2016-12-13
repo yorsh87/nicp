@@ -11,6 +11,8 @@ namespace nicp {
     _imageCols = 640;
     _horizontalFov = M_PI;
     _verticalFov = M_PI / 4.0f;
+    _horizontalCenter = _imageCols / 2.0f;
+    _verticalCenter = _imageRows / 2.0f;
     _updateParameters();
   }
 
@@ -21,8 +23,6 @@ namespace nicp {
     _inverseHorizontalResolution = 1.0f / _horizontalResolution;
     _verticalResolution = _imageRows / (2.0f * _verticalFov);
     _inverseVerticalResolution = 1.0f / _verticalResolution;
-    _horizontalCenter = _imageCols / 2.0f;
-    _verticalCenter = _imageRows / 2.0f;
   }
 
   void  SphericalPointProjector::scale(float scalingFactor) {

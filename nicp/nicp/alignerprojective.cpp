@@ -90,6 +90,7 @@ namespace nicp {
 	}
 
 	Vector6f dx = H.ldlt().solve(-b);
+	
 	Eigen::Isometry3f dT = v2t(dx);
 	invT = dT * invT;
       }
@@ -106,23 +107,24 @@ namespace nicp {
     _error = _linearizer->error();
     _inliers = _linearizer->inliers();
 
+
     _computeStatistics(_mean, _omega, _translationalEigenRatio, _rotationalEigenRatio);
     if (_rotationalEigenRatio > _rotationalMinEigenRatio ||
-	_translationalEigenRatio > _translationalMinEigenRatio) {
+    	_translationalEigenRatio > _translationalMinEigenRatio) {
       _solutionValid = false;
       if (_debug) {
-	cout << endl;
-	cout << "************** WARNING SOLUTION MIGHT BE INVALID (eigenratio failure) **************" << endl;
-	cout << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
-	cout << "************************************************************************************" << endl;
+    	cout << endl;
+    	cout << "************** WARNING SOLUTION MIGHT BE INVALID (eigenratio failure) **************" << endl;
+    	cout << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
+    	cout << "************************************************************************************" << endl;
       }
     }
     else {
       _solutionValid = true;
       if (_debug) {
-	cout << "************** I FOUND SOLUTION VALID SOLUTION   (eigenratio ok) *******************" << endl;
-	cout << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
-	cout << "************************************************************************************" << endl;
+    	cout << "************** I FOUND SOLUTION VALID SOLUTION   (eigenratio ok) *******************" << endl;
+    	cout << "tr: " << _translationalEigenRatio << " rr: " << _rotationalEigenRatio << endl;
+    	cout << "************************************************************************************" << endl;
       }
     }
     if (_debug) {

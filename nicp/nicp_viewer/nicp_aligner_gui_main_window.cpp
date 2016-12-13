@@ -36,17 +36,17 @@ namespace nicp_viewer {
     }
 
     // Create class objects
-    _depthScale = 0.001f;
     _sensorOffset = Eigen::Isometry3f::Identity();
     _sensorOffset.matrix().row(3) << 0.0f, 0.0f, 0.0f, 1.0f;
 
     _pinholeProjector = new nicp::PinholePointProjector();
-    _cylindricalProjector = new nicp::CylindricalPointProjector();
     _sphericalProjector = new nicp::SphericalPointProjector();
     _depthImageConverterIntegralImage = new DepthImageConverterIntegralImage();
     _alignerProjective = new nicp::AlignerProjective();
     _alignerNN = new nicp::AlignerNN();
     _aligner = _alignerProjective;
+    _linearizer = new nicp::Linearizer();
+    _linearizer->setAligner(_aligner);
     _selectProjector();
     _statsCalculatorIntegralImage = new nicp::StatsCalculatorIntegralImage();
     _pointInformationMatrixCalculator = new nicp::PointInformationMatrixCalculator();
@@ -58,8 +58,6 @@ namespace nicp_viewer {
 
     _correspondenceFinderProjective = new nicp::CorrespondenceFinderProjective();
     _correspondenceFinderNN = new nicp::CorrespondenceFinderNN();
-    _linearizer = new nicp::Linearizer();
-    _linearizer->setAligner(_aligner);
     _alignerProjective->setProjector(_projector);
     _alignerProjective->setCorrespondenceFinder(_correspondenceFinderProjective);
     _alignerProjective->setLinearizer(_linearizer);
@@ -85,13 +83,10 @@ namespace nicp_viewer {
 
   void NICPAlignerGuiMainWindow::projectorsUpdate() {
     _pinholeProjector->setImageSize(rows_spinBox->value(), cols_spinBox->value());
-    _cylindricalProjector->setImageSize(rows_spinBox->value(), cols_spinBox->value());
     _sphericalProjector->setImageSize(rows_spinBox->value(), cols_spinBox->value());
     _pinholeProjector->setMinDistance(min_distance_doubleSpinBox->value());
-    _cylindricalProjector->setMinDistance(min_distance_doubleSpinBox->value());
     _sphericalProjector->setMinDistance(min_distance_doubleSpinBox->value());
     _pinholeProjector->setMaxDistance(max_distance_doubleSpinBox->value());
-    _cylindricalProjector->setMaxDistance(max_distance_doubleSpinBox->value());
     _sphericalProjector->setMaxDistance(max_distance_doubleSpinBox->value());
 
     Eigen::Matrix3f cameraMatrix;
@@ -103,16 +98,12 @@ namespace nicp_viewer {
     _pinholeProjector->setBaseline(baseline_doubleSpinBox->value());
     _pinholeProjector->setAlpha(alpha_doubleSpinBox->value());
 
-    _cylindricalProjector->setAngularFov(cyl_horizontal_fov_doubleSpinBox->value());
-    float verticalFocalLength = (rows_spinBox->value() / 2.0f) / tanf(cyl_vertical_fov_doubleSpinBox->value());
-    _cylindricalProjector->setVerticalFocalLength(verticalFocalLength);
-    _cylindricalProjector->setVerticalCenter(vertical_center_spinBox->value());
-
     _sphericalProjector->setHorizontalFov(sph_horizontal_fov_doubleSpinBox->value());
     _sphericalProjector->setVerticalFov(sph_vertical_fov_doubleSpinBox->value());
+    _sphericalProjector->setHorizontalCenter(sph_horizontal_center_doubleSpinBox->value());
+    _sphericalProjector->setVerticalCenter(sph_vertical_center_doubleSpinBox->value());
 
     _pinholeProjector->scale(1.0f / scale_doubleSpinBox->value());
-    _cylindricalProjector->scale(1.0f / scale_doubleSpinBox->value());
     _sphericalProjector->scale(1.0f / scale_doubleSpinBox->value());
 
     _correspondenceFinderProjective->setImageSize(rows_spinBox->value(), cols_spinBox->value());
@@ -169,6 +160,9 @@ namespace nicp_viewer {
   }
 
   void NICPAlignerGuiMainWindow::addCloud() {
+    projectorsUpdate();
+    statsUpdate();
+    visualizationUpdate();
     _selectProjector();
     QList<QListWidgetItem*> selectedItems = cloud_selection_listWidget->selectedItems();
     for(int i = 0; i < selectedItems.size(); ++i) {
@@ -179,7 +173,7 @@ namespace nicp_viewer {
 	continue;
       }
       _referenceDepth = _currentDepth.clone();
-      nicp::DepthImage_convert_16UC1_to_32FC1(_currentDepth, _rawDepth, _depthScale);
+      nicp::DepthImage_convert_16UC1_to_32FC1(_currentDepth, _rawDepth, image_scale_doubleSpinBox->value());
       nicp::DepthImage_scale(_scaledDepth, _currentDepth, scale_doubleSpinBox->value());
       _currentDepth = _scaledDepth.clone();
       nicp::Cloud *cloud = new Cloud();
@@ -295,6 +289,11 @@ namespace nicp_viewer {
   }
 
   void NICPAlignerGuiMainWindow::optimize() {
+    projectorsUpdate();
+    statsUpdate();
+    correspondencesUpdate();
+    alignerUpdate();
+    visualizationUpdate();
     std::cerr << "sc: " << _statsCalculatorIntegralImage->minImageRadius() << " " << _statsCalculatorIntegralImage->maxImageRadius() << " "
 	      << _statsCalculatorIntegralImage->minPoints() << " " << _statsCalculatorIntegralImage->worldRadius() << " "
 	      << _statsCalculatorIntegralImage->curvatureThreshold() << std::endl;
@@ -305,7 +304,7 @@ namespace nicp_viewer {
     std::cerr << "cfnn: " << _correspondenceFinderNN->inlierDistanceThreshold() << " " << _correspondenceFinderNN->inlierNormalAngularThreshold() << " "
 	      << _correspondenceFinderNN->inlierCurvatureRatioThreshold() << " " << _correspondenceFinderNN->flatCurvatureThreshold() << std::endl;
     std::cerr << "al: " << _aligner->innerIterations() << " " << _aligner->outerIterations() << " "
-	      << _aligner->minInliers() << " " << _linearizer->inlierMaxChi2() << std::endl;
+	      << _aligner->minInliers() << " " << _aligner->lambda() << " " << _linearizer->inlierMaxChi2() << std::endl;
     if(viewer->drawableList().size() < 2) { return; }
 
     _selectProjector();
@@ -444,14 +443,12 @@ namespace nicp_viewer {
   void NICPAlignerGuiMainWindow::_selectProjector() {
     if(pinhole_projector_radioButton->isChecked()) {
       _projector = _pinholeProjector;
+      _linearizer->setZScaling(true);
       std::cout << "[STATUS] Using pinhole projector" << std::endl;
-    }
-    if(cylindrical_projector_radioButton->isChecked()) {
-      _projector = _cylindricalProjector;
-      std::cout << "[STATUS] Using cylindrical projector" << std::endl;
     }
     if(spherical_projector_radioButton->isChecked()) {
       _projector = _sphericalProjector;
+      _linearizer->setZScaling(false);
       std::cout << "[STATUS] Using spherical projector" << std::endl;
     }
 
