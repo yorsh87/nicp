@@ -4,15 +4,6 @@
 
 #include "opengl_primitives.h"
 
-// some macro helpers for identifying the version number of QGLViewer
-// QGLViewer changed some parts of its API in version 2.6.
-// The following preprocessor hack accounts for this.
-#if (((QGLVIEWER_VERSION & 0xff0000) >> 16) >= 2 && ((QGLVIEWER_VERSION & 0x00ff00) >> 8) >= 6)
-#define qglv_real qreal
-#else
-#define qglv_real float
-#endif
-
 using namespace Eigen;
 
 namespace nicp_viewer {
@@ -21,16 +12,16 @@ namespace nicp_viewer {
   public:
     StandardCamera() : _standard(true) {}
   
-    qglv_real zNear() const {
+    qreal zNear() const {
       if(_standard) 
-	return qglv_real(0.001f); 
+	return qreal(0.001f); 
       else 
 	return Camera::zNear(); 
     }
 
-    qglv_real zFar() const {  
+    qreal zFar() const {  
       if(_standard) 
-	return qglv_real(10000.0f); 
+	return qreal(10000.0f); 
       else 
 	return Camera::zFar();
     }
@@ -43,7 +34,7 @@ namespace nicp_viewer {
     bool _standard;
   };
 
-  NICPQGLViewer::NICPQGLViewer(QWidget *parent, const QGLWidget *shareWidget, Qt::WFlags flags) : QGLViewer(parent, shareWidget, flags), _last_key_event(QEvent::None, 0, Qt::NoModifier) {
+  NICPQGLViewer::NICPQGLViewer(QWidget *parent, const QGLWidget *shareWidget, Qt::WindowFlags flags) : QGLViewer(parent, shareWidget, flags), _last_key_event(QEvent::None, 0, Qt::NoModifier) {
     _last_key_event_processed = true;
     
     _ellipsoidDrawList = 0;
@@ -82,8 +73,6 @@ namespace nicp_viewer {
   void NICPQGLViewer::init() {
     // Init QGLViewer.
     QGLViewer::init();
-    // Set background color light yellow.
-    // setBackgroundColor(QColor::fromRgb(255, 255, 194));
 
     // Set some default settings.
     glEnable(GL_LINE_SMOOTH);

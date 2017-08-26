@@ -22,6 +22,7 @@ System Requirements
 
 ### Minimum
 
+- CMake  >= 3.5
 - Eigen3 >= 3.2.0
 - OpenCV >= 2.4.8
 - Flann  >= 1.7
@@ -29,23 +30,33 @@ System Requirements
 ### Complete
 
 - OpenGL
-- Qt4
+- Qt5
 - QGLViewer
 
-Building on Linux
+Building on Linux (Ubuntu 16.04 LTS)
 ----
 
-- mkdir build
-- cd build
-- cmake ..
-- make
+$> sudo apt install git cmake libeigen3-dev libsuitesparse-dev qtdeclarative5-dev qt5-qmake libqglviewer-dev libflann-dev libopencv-dev freeglut3-dev
+
+$> git clone https://github.com/yorsh87/nicp.git
+
+$> cd nicp
+
+$> mkdir build
+
+$> cd build
+
+$> cmake ..
+
+$> make
 
 Branches
 ----
 
 - master : current stable branch
 - develop: current development branch
-- iros2015_experiments: snapshot at the time of IROS2015 paper submission
+- iros2015_experiments: code snapshot used for IROS 2015 paper publication [[pdf](http://jacoposerafin.com/wp-content/uploads/serafin15iros.pdf)]
+- ras2016_experiments: code snapshot used for RAS 2017 paper publication [[pdf](http://jacoposerafin.com/wp-content/uploads/serafin17ras.pdf)]
 
 Examples
 ----

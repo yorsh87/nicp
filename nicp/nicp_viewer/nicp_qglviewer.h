@@ -16,7 +16,7 @@ namespace nicp_viewer {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-    NICPQGLViewer(QWidget *parent = 0, const QGLWidget *shareWidget = 0, Qt::WFlags flags = 0);
+    NICPQGLViewer(QWidget *parent = 0, const QGLWidget *shareWidget = 0, Qt::WindowFlags flags = 0);
     virtual ~NICPQGLViewer() {}
 
     virtual void init();

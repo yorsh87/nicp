@@ -69,13 +69,13 @@ int main(int argc, char** argv) {
   vlayout->addWidget(listWidget);
   NICPQGLViewer* viewer = new NICPQGLViewer(mainWindow);
   vlayout2->addWidget(viewer);
-  viewer->init();
   mainWindow->show();
+  viewer->init();
+  viewer->setAxisIsDrawn(true);
+  viewer->setBackgroundColor(QColor(100, 100, 100));
   viewer->show();
   listWidget->show();
-  viewer->setAxisIsDrawn(true);
   mainWindow->showMaximized();
-  viewer->setBackgroundColor(QColor(100, 100, 100));
 
   set<string> filenamesSet = readDirectory(workingDirectory);
   for(set<string>::const_iterator it = filenamesSet.begin(); it != filenamesSet.end(); ++it) {

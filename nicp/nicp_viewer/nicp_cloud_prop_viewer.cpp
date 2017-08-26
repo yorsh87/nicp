@@ -68,8 +68,6 @@ int main(int argc, char **argv) {
 
   NICPQGLViewer *nicp_qglviewer = new NICPQGLViewer(mainWindow);
   viewer_layout->addWidget(nicp_qglviewer);
-  nicp_qglviewer->init();
-  nicp_qglviewer->setAxisIsDrawn(true);
 
   QLabel *stepLabel = new QLabel("Step", mainWindow);
   QSpinBox *stepSpinBox = new QSpinBox(mainWindow);
@@ -185,7 +183,11 @@ int main(int argc, char **argv) {
 
   // Manage GUI
   mainWindow->show();
+  nicp_qglviewer->init();
+  nicp_qglviewer->setAxisIsDrawn(true);
   nicp_qglviewer->show();
+  mainWindow->showMaximized();
+
   GLParameterPoints pointsParameter(1.0f, Eigen::Vector4f(0.0f, 1.0f, 0.0f, 1.0f));
   pointsParameter.setShow(true);
   DrawablePoints pointsDrawable(Eigen::Isometry3f::Identity(), (GLParameter*)&pointsParameter, &pointCloud.points(), &pointCloud.normals());
