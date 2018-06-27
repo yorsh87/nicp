@@ -51,7 +51,6 @@ namespace nicp {
       int x, y;
       float d;
       if(!_project(x, y, d, *point) ||
-	 d < _minDistance || d > _maxDistance ||
 	 x < 0 || x >= indexImage.cols ||
 	 y < 0 || y >= indexImage.rows) {
 	continue;
