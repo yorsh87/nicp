@@ -12,16 +12,16 @@ namespace nicp_viewer {
   public:
     StandardCamera() : _standard(true) {}
   
-    float zNear() const {
+    qreal zNear() const {
       if(_standard) 
-	return 0.001f; 
+	return qreal(0.001f); 
       else 
 	return Camera::zNear(); 
     }
 
-    float zFar() const {  
+    qreal zFar() const {  
       if(_standard) 
-	return 10000.0f; 
+	return qreal(10000.0f); 
       else 
 	return Camera::zFar();
     }
@@ -34,7 +34,7 @@ namespace nicp_viewer {
     bool _standard;
   };
 
-  NICPQGLViewer::NICPQGLViewer(QWidget *parent, const QGLWidget *shareWidget, Qt::WFlags flags) : QGLViewer(parent, shareWidget, flags), _last_key_event(QEvent::None, 0, Qt::NoModifier) {
+  NICPQGLViewer::NICPQGLViewer(QWidget *parent, const QGLWidget *shareWidget, Qt::WindowFlags flags) : QGLViewer(parent, shareWidget, flags), _last_key_event(QEvent::None, 0, Qt::NoModifier) {
     _last_key_event_processed = true;
     
     _ellipsoidDrawList = 0;
@@ -73,8 +73,6 @@ namespace nicp_viewer {
   void NICPQGLViewer::init() {
     // Init QGLViewer.
     QGLViewer::init();
-    // Set background color light yellow.
-    // setBackgroundColor(QColor::fromRgb(255, 255, 194));
 
     // Set some default settings.
     glEnable(GL_LINE_SMOOTH);

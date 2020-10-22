@@ -11,6 +11,8 @@ namespace nicp {
     _imageCols = 640;
     _horizontalFov = M_PI;
     _verticalFov = M_PI / 4.0f;
+    _horizontalCenter = _imageCols / 2.0f;
+    _verticalCenter = _imageRows / 2.0f;
     _updateParameters();
   }
 

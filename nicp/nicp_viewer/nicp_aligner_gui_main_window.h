@@ -5,7 +5,6 @@
 #include "nicp_aligner_gui_ui_main_window.h"
 
 #include "nicp/pinholepointprojector.h"
-#include "nicp/cylindricalpointprojector.h"
 #include "nicp/sphericalpointprojector.h"
 #include "nicp/statscalculatorintegralimage.h"
 #include "nicp/informationmatrixcalculator.h"
@@ -47,12 +46,10 @@ namespace nicp_viewer {
 
     unsigned int _pngCounter, _nicpCounter;
 
-    float _depthScale;
     Eigen::Isometry3f _sensorOffset;
 
     nicp::PointProjector *_projector;
     nicp::PinholePointProjector *_pinholeProjector;
-    nicp::CylindricalPointProjector *_cylindricalProjector;
     nicp::SphericalPointProjector *_sphericalProjector;
     nicp::StatsCalculatorIntegralImage *_statsCalculatorIntegralImage;
     nicp::PointInformationMatrixCalculator *_pointInformationMatrixCalculator;

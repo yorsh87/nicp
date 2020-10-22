@@ -18,7 +18,7 @@ namespace nicp {
   public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
-    static const float wCoordinate = wCoordinate_;
+    static constexpr float wCoordinate = wCoordinate_;
 
     /**
      *  Empty constructor.

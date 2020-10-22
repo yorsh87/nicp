@@ -6,7 +6,7 @@ namespace nicp {
 
   /** \struct InformationMatrix informationmatrix.h "informationmatrix.h"
    *  \brief Class that can be used to represent a 3x3 information matrix.
-   *  
+   *
    *  This class is a structure thought to contain a 3x3 information matrix. It
    *  also provides some operators that can be applied to the infromation matrix.
    */
@@ -37,12 +37,12 @@ namespace nicp {
       block<1, 4>(3, 0).setZero();
       block<4, 1>(0, 3).setZero();
     }
-    
+
     /**
      *  Destructor.
      */
     virtual ~InformationMatrix() {}
-    
+
     /**
      *  This methods implements the operator equal between an InformationMatrix and an Eigen::MatrixBase object.
      */
@@ -76,8 +76,8 @@ namespace nicp {
      */
     template<typename OtherDerived>
       inline InformationMatrix& transformInPlace(const Eigen::MatrixBase<OtherDerived> &other) const {
-      const Eigen::Matrix3f& R = other.block<3,3>(0,0);
-      block<3, 3>(0, 0) = R * block<3, 3>(0, 0) * R.transpose(); 
+      const Eigen::Matrix3f& R = other.template block<3, 3>(0, 0);
+      block<3, 3>(0, 0) = R * block<3, 3>(0, 0) * R.transpose();
       return *this;
     }
 
@@ -85,12 +85,12 @@ namespace nicp {
 
   /** \class InformationMatrixVector informationmatrix.h "informationmatrix.h"
    *  \brief Class that can be used to represent a 3x3 information matrix vector.
-   *  
+   *
    *  This class provides a structure to handle creation and manipulation of a vector
    *  of InformationMatrix.
    */
   class InformationMatrixVector : public TransformableVector<InformationMatrix> {
-  public: 
+  public:
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW;
 
     /**
@@ -98,7 +98,7 @@ namespace nicp {
      *  This constructor creates an InformationMatrixVector of size zero.
      */
     inline InformationMatrixVector() : TransformableVector<InformationMatrix>() {}
-    
+
     /**
      *  Destructor.
      */
@@ -126,7 +126,7 @@ namespace nicp {
    * \brief A 6x6 float matrix.
    */
   typedef Eigen::Matrix<float, 6, 6> Matrix6f;
-  
+
   /** \typedef Matrix6fVector
    * \brief A vector of Matrix6f.
    */
