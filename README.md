@@ -24,7 +24,7 @@ System Requirements
 
 - CMake  >= 3.5
 - Eigen3 >= 3.2.0
-- OpenCV >= 2.4.8
+- OpenCV >= 3.2.0
 - Flann  >= 1.7
 
 ### Complete
@@ -33,10 +33,10 @@ System Requirements
 - Qt5
 - QGLViewer
 
-Building on Linux (Ubuntu 16.04 LTS)
+Building on Linux (Ubuntu 18.04 LTS)
 ----
 
-$> sudo apt install git cmake libeigen3-dev libsuitesparse-dev qtdeclarative5-dev qt5-qmake libqglviewer-dev libflann-dev libopencv-dev freeglut3-dev
+$> sudo apt install git cmake libeigen3-dev libsuitesparse-dev qtdeclarative5-dev qt5-qmake libqglviewer-dev-qt5 libqglviewer2-qt5 libqglviewer-headers libflann-dev libopencv-dev freeglut3-dev
 
 $> git clone https://github.com/yorsh87/nicp.git
 

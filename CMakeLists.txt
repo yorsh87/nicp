@@ -3,7 +3,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 3.5)
 PROJECT(nicp)
 
 # Optionally compiling part
-OPTION(BUILD_NICP_VIEWER "enables NICP viewer" true)
+OPTION(BUILD_NICP_VIEWER "enables NICP viewer" false)
 OPTION(BUILD_NICP_TEST "enables NICP test" false)
 
 # The library prefix
@@ -73,7 +73,7 @@ IF(OPENMP_FOUND)
 ENDIF(OPENMP_FOUND)
 
 # Find Opencv
-FIND_PACKAGE(OpenCV 2.4.8 REQUIRED)
+FIND_PACKAGE(OpenCV 3.2.0 REQUIRED)
 INCLUDE_DIRECTORIES(${OpenCV_INCLUDE_DIRS})
 
 # Set up the top-level include directories
