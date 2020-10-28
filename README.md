@@ -6,7 +6,7 @@ exploits the 3D structure to determine the data association between the two
 clouds taking into account each point and its local features of the surface:
 normals and curvature.
 This method adopt a line of sight criterion to find the corresponding points between
-the two clouds to register. This, togheter with the efficient algorithms and
+the two clouds to register. This, together with the efficient algorithms and
 data structures used by NICP, increase the speed of the method allowing
 real-time computation.
 NICP solves the alignment problem by casting a least squares formulation that
