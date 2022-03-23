@@ -35,7 +35,7 @@ System Requirements
 
 Building on Linux (Ubuntu 18.04 LTS)
 ----
-
+```
 $> sudo apt install git cmake libeigen3-dev libsuitesparse-dev qtdeclarative5-dev qt5-qmake libqglviewer-dev-qt5 libqglviewer2-qt5 libqglviewer-headers libflann-dev libopencv-dev freeglut3-dev
 
 $> git clone https://github.com/yorsh87/nicp.git
@@ -49,7 +49,7 @@ $> cd build
 $> cmake ..
 
 $> make
-
+```
 Branches
 ----
 
@@ -62,8 +62,8 @@ Examples
 ----
 
 Once you compiled the code you will have the following exmaple binaries:
-- nicp_simple_aligner is a binary that, given a set of depth images and a .txt file containing the list of depth images to align, perform the point cloud registrations
-- nicp_aligner same as nicp_simple_aligner, but it uses an incremental version of the algorithm
-- nicp_aligner_gui is a simple GUI for point cloud alignment, several parameters of the algorithm can be modified with GUI buttons
-- nicp_cloud_prop_viewer simple GUI to see basic properties of a depth image / point cloud
-- nicp_simple_viewer is a GUI that given a folder allows to visualize all the point clouds, saved in .nicp format, in the folder
+- `nicp_simple_aligner` is a binary that, given a set of depth images and a .txt file containing the list of depth images to align, perform the point cloud registrations
+- `nicp_aligner` same as nicp_simple_aligner, but it uses an incremental version of the algorithm
+- `nicp_aligner_gui` is a simple GUI for point cloud alignment, several parameters of the algorithm can be modified with GUI buttons
+- `nicp_cloud_prop_viewer` simple GUI to see basic properties of a depth image / point cloud
+- `nicp_simple_viewer` is a GUI that given a folder allows to visualize all the point clouds, saved in .nicp format, in the folder
